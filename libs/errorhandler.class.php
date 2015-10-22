@@ -2,7 +2,7 @@
 class ErrorHandler {
     public static function handleError($errno, $errstr) {
         // check debug mode
-        if (1) {
+        if (Config::get("app.debug")) {
             $error = "{$errstr} ({$errno})";
         }
         else {
@@ -33,7 +33,7 @@ class ErrorHandler {
         echo $error;
 
         // check debug mode
-        if (1) {
+        if (Config::get("app.debug")) {
             echo "<br /><pre>\n";
 
             self::printBacktrace(self::getBacktrace());
