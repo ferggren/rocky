@@ -9,9 +9,10 @@ ini_set("display_errors", 1);
 
 if (version_compare(PHP_VERSION, '5.6.0', '<=')) {
     ini_set('mbstring.internal_encoding', 'UTF-8');
+    ini_set('mbstring.func_overload', 7);
 }
 
-ini_set('mbstring.func_overload', 7);
+ini_set('iconv.internal_encoding', 'UTF-8');
 ini_set('default_charset', 'UTF-8');
 
 // ?? use other way to disable caching
@@ -43,4 +44,5 @@ function autoload($class_name) {
     exit;
 }
 
-exit("ok");
+spl_autoload_register("autoload");
+set_error_handler(array('ErrorHandler', "handleError"), E_ALL | E_STRICT);
