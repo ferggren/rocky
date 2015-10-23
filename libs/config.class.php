@@ -6,7 +6,7 @@ class Config {
         $name = strtolower($name);
 
         if (!preg_match('#^([a-z0-9_-]++)\.([a-z0-9_-]++)$#', $name, $data)) {
-            trigger_error("incorrect config variable $name");
+            trigger_error('incorrect config variable' . $name);
             exit;
         }
 
@@ -28,17 +28,17 @@ class Config {
             return self::$cache[$prefix];
         }
 
-        $file = ROOT_PATH . "/config/" . $prefix . ".php";
+        $file = ROOT_PATH . '/config/' . $prefix . '.php';
 
         if (!file_exists($file)) {
-            trigger_error("config {$prefix} not found");
+            trigger_error('config ' . $prefix . ' not found');
             exit;
         }
 
         include $file;
 
         if (!isset($config)) {
-            trigger_error("incorrect config file {$config}");
+            trigger_error('incorrect config file' . $config);
             exit;
         }
 

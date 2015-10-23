@@ -1,5 +1,6 @@
 <?php
 $config = array(
-    "debug" => true,
+    'debug' => true,
+    'default_controller' => 'index',
 );
 ?>

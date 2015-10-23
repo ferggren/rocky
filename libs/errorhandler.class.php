@@ -1,13 +1,13 @@
 <?php
 class ErrorHandler {
     public static function handleError($errno, $errstr) {
-        Logger::log("{$errstr} ({$errno})", "runtime");
+        Logger::log("{$errstr} ({$errno})", 'runtime');
 
-        if (Config::get("app.debug")) {
+        if (Config::get('app.debug')) {
             $error = "{$errstr} ({$errno})";
         }
         else {
-            $error = "Something went terribly wrong";
+            $error = 'Something went terribly wrong';
         }
 
         // disable caching?
@@ -34,28 +34,28 @@ class ErrorHandler {
 
         echo $error;
 
-        if (Config::get("app.debug")) {
+        if (Config::get('app.debug')) {
             echo "<br /><pre>\n";
 
             self::printBacktrace(self::getBacktrace());
 
-            echo "</pre>";
+            echo '</pre>';
         }
 
-        echo "</body></html>";
+        echo '</body></html>';
         exit;
     }
 
     protected static function showAjaxError($error) {
         header('Content-type: application/json; charset=utf-8');
 
-        if (Config::get("app.debug") && count($stack = self::getBacktrace())) {
-            $error = $stack[0]["file"] . " => " . $error;
+        if (Config::get('app.debug') && count($stack = self::getBacktrace())) {
+            $error = $stack[0]['file'] . ' => ' . $error;
         }
 
         $ret = array(
-            "status" => "error",
-            "error" => $error,
+            'status' => 'error',
+            'error' => $error,
         );
 
         echo json_encode($ret, JSON_UNESCAPED_UNICODE);
@@ -79,7 +79,7 @@ class ErrorHandler {
         }
 
         foreach ($stack as $i => $row) {
-            $stack[$i]["_len"] = $len = iconv_strlen($row["file"]);
+            $stack[$i]["_len"] = $len = iconv_strlen($row['file']);
             $maxlen = max($maxlen, $len);
         }
 
@@ -88,20 +88,20 @@ class ErrorHandler {
             printf(
                 "%2d %s%s%s\n",
                 ++$counter,
-                $row["file"],
-                str_repeat(" ", $maxlen - $row["_len"] + 1),
-                $row["context"]
+                $row['file'],
+                str_repeat(' ', $maxlen - $row['_len'] + 1),
+                $row['context']
             );
         }
     }
 
     protected static function getBacktrace() {
         $ret = array();
-        $file = "";
+        $file = '';
 
         foreach (debug_backtrace() as $error) {
-            if (isset($error["file"])) {
-                $file = str_replace(ROOT_PATH, "", $error["file"]);
+            if (isset($error['file'])) {
+                $file = str_replace(ROOT_PATH, '', $error['file']);
             }
 
             // assume that errorHandler itself does't contain any errors
@@ -109,29 +109,29 @@ class ErrorHandler {
                 continue;
             }
 
-            $context = "";
+            $context = '';
 
-            if (isset($error["class"])) {
-                if (isset($error["type"]) && $error["type"] == "::") {
-                    $context = $error["class"] . "::";
+            if (isset($error['class'])) {
+                if (isset($error['type']) && $error['type'] == '::') {
+                    $context = $error['class'] . '::';
                 }
                 else {
-                    $context = $error["class"] . "->";
+                    $context = $error['class'] . '->';
                 }
             }
 
-            $context .= $error["function"] . "()";
+            $context .= $error['function'] . '()';
 
-            $line = "";
+            $line = '';
 
-            if (isset($error["line"])) {
-                $line = "::" . $error["line"];
+            if (isset($error['line'])) {
+                $line = '::' . $error['line'];
             }
 
 
             $ret[] = array(
-                "file" => $file . $line,
-                "context" => $context,
+                'file' => $file . $line,
+                'context' => $context,
             );
         }
 
