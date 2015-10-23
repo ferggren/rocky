@@ -1,7 +1,8 @@
 <?php
 class ErrorHandler {
     public static function handleError($errno, $errstr) {
-        // check debug mode
+        Logger::log("{$errstr} ({$errno})", "runtime");
+
         if (Config::get("app.debug")) {
             $error = "{$errstr} ({$errno})";
         }
@@ -9,7 +10,8 @@ class ErrorHandler {
             $error = "Something went terribly wrong";
         }
 
-        //disable caching?
+        // disable caching?
+        // ?
 
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             self::showAjaxError($error);
@@ -32,7 +34,6 @@ class ErrorHandler {
 
         echo $error;
 
-        // check debug mode
         if (Config::get("app.debug")) {
             echo "<br /><pre>\n";
 
@@ -46,6 +47,12 @@ class ErrorHandler {
     }
 
     protected static function showAjaxError($error) {
+        header('Content-type: application/json; charset=utf-8');
+
+        if (Config::get("app.debug") && count($stack = self::getBacktrace())) {
+            $error = $stack[0]["file"] . " => " . $error;
+        }
+
         $ret = array(
             "status" => "error",
             "error" => $error,
@@ -72,7 +79,7 @@ class ErrorHandler {
         }
 
         foreach ($stack as $i => $row) {
-            $stack[$i]["_len"] = $len = iconv_strlen($row["context"]);
+            $stack[$i]["_len"] = $len = iconv_strlen($row["file"]);
             $maxlen = max($maxlen, $len);
         }
 
@@ -81,9 +88,9 @@ class ErrorHandler {
             printf(
                 "%2d %s%s%s\n",
                 ++$counter,
-                $row["context"],
+                $row["file"],
                 str_repeat(" ", $maxlen - $row["_len"] + 1),
-                $row["file"]
+                $row["context"]
             );
         }
     }
@@ -95,6 +102,11 @@ class ErrorHandler {
         foreach (debug_backtrace() as $error) {
             if (isset($error["file"])) {
                 $file = str_replace(ROOT_PATH, "", $error["file"]);
+            }
+
+            // assume that errorHandler itself does't contain any errors
+            if (preg_match('#libs/errorhandler\.class\.php$#i', $file)) {
+                continue;
             }
 
             $context = "";
