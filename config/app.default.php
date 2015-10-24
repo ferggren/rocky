@@ -9,7 +9,12 @@ $config = array(
 
     // If true, controllers tree will be cached in ./tmp/
     // Cache doesn't rebuild automaticly,
-    // if changes were made, you need manually delete ./tmp/controllers*
+    // if changes were made, you need to manually delete ./tmp/controllers*
     'cache_controllers' => false,
+
+    // If true, templates will be cached in ./tmp/
+    // Cache doesn't rebuild automaticly,
+    // if changes were made, you need to manually delete ./tmp/templates*
+    'cache_templates' => true,
 );
 ?>
