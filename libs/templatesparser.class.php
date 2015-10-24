@@ -15,6 +15,9 @@ class TemplatesParser {
         return self::$list;
     }
 
+    /**
+    * Building a list of all views with basic meta info
+    */
     protected static function loadTemplates($prefix = '/') {
         $path = ROOT_PATH . '/views/' . $prefix;
 
@@ -52,6 +55,9 @@ class TemplatesParser {
         }
     }
 
+    /**
+    * Makes basic view info
+    */
     protected static function getTemplateMeta($path) {
         $info = array(
             'parent' => '',
@@ -68,6 +74,9 @@ class TemplatesParser {
         return 'T_' . substr(md5($path), 0, 20);
     }
 
+    /**
+    * Makes path to view's cache
+    */
     protected static function makeTemplateTmpPath($path) {
         $tmp_path = ROOT_PATH . '/tmp/templates/';
 
@@ -99,6 +108,9 @@ class TemplatesParser {
         }
     }
 
+    /**
+    * Processing view, generating class and putting it into cache
+    */
     protected static function processTemplate($view) {
         $view_info = &self::$list[$view];
 
@@ -131,10 +143,61 @@ class TemplatesParser {
         rename($cache_path . '.tmp', $cache_path);
     }
 
+    /**
+    * Extract all sections from buffer and returns what was left
+    * @param (sections) extracted sections will be writed into that array
+    */
     protected static function processSections($buffer, &$sections) {
+        $regexp_name = '\(?[\'"]?([a-zA-Z0-9_.-]++)[\'"]?\)?';
+        $regexp_sections = "#\s*@section\s*+{$regexp_name}\s*+((?:(?R)|.)*?)\s*+@(show|stop)\s*+#s";
+        $regexp_yield = "#\s*+@yield\s*+{$regexp_name}#s";
+
+        if (preg_match_all($regexp_sections, $buffer, $data, PREG_SET_ORDER)) {
+            foreach ($data as $section) {
+                $section_name = strtolower($section[1]);
+
+                if ($section[3] == 'show') {
+                    $buffer = str_replace(
+                        $section[0],
+                        "<?php \$this->section_{$section_name}(); ?>",
+                        $buffer
+                    );
+                }
+                else {
+                    $buffer = str_replace(
+                        $section[0],
+                        '',
+                        $buffer
+                    );
+                }
+
+                $section_content = $section[2];
+                $section_content = self::processSections($section_content, $sections);
+
+                $sections[$section_name] = $section_content;
+            }
+        }
+
+        if (preg_match_all($regexp_yield, $buffer, $data, PREG_SET_ORDER)) {
+            foreach ($data as $section) {
+                $section_name = strtolower($section[1]);
+
+                $buffer = str_replace(
+                    $section[0],
+                    "<?php \$this->section_{$section_name}(); ?>",
+                    $buffer
+                );
+
+                $sections[$section_name] = '';
+            }
+        }
+
         return $buffer;
     }
 
+    /**
+    * Making code for view's class with specified sections
+    */
     protected static function makeTemplateCode($view, $sections) {
         $view_info = self::$list[$view];
 
@@ -166,12 +229,18 @@ class TemplatesParser {
         return $code;
     }
 
+    /**
+    * Check if view contains itself somwhere in parent tree
+    */
     protected static function checkViewsParentLoop() {
         foreach (array_keys(self::$list) as $view) {
             self::checkViewParentLoop($view);
         }
     }
 
+    /**
+    * Check if view contains itself somwhere in parent tree
+    */
     protected static function checkViewParentLoop($view) {
         $parent = $view;
         $parents = array();
@@ -190,8 +259,32 @@ class TemplatesParser {
         return true;
     }
 
+    /**
+    * Process and translate section into code
+    */
     protected static function section2code($view, $section_name, $section_content) {
-        return '';
+        $section_content = preg_replace(
+            '#@parent(?![a-zA-Z0-9_-])#',
+            "<?php parent::section_{$section_name}(); ?>",
+            $section_content
+        );
+
+        $section_content = '?>' . $section_content . '<?php';
+        $section_content = str_replace('?><?php', '', $section_content);
+
+        if ($section_content) {
+            $export  = 'foreach($this->args as $arg_name => $arg_val){';
+            $export .= '$$arg_name = $arg_val;';
+            $export .= "}\n";
+
+            $section_content = $export . $section_content;
+        }
+
+        $method = "public function section_{$section_name}() {\n";
+        $method .= $section_content;
+        $method .= "\n}\n";
+
+        return $method;
     }
 }
 ?>
