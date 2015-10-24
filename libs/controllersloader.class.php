@@ -3,7 +3,13 @@ class ControllersLoader {
     protected static $cache = false;
     protected static $stack = array();
 
-    public static function load($url) {
+    /**
+     * Calling a controller by url
+     *
+     * @param (url) url that will be matched with list of controllers 
+     * @param (smart_args_enabled) search arguments values in GET and POST
+     */
+    public static function load($url, $smart_args_enabled = true) {
         if (!($info = self::getController($url))) {
             return false;
         }
@@ -29,7 +35,8 @@ class ControllersLoader {
         $class->__callAction(
             $info['action']['method'],
             $info['action']['argumets'],
-            $info['args']
+            $info['args'],
+            !!$smart_args_enabled
         );
 
         array_pop(self::$stack);
