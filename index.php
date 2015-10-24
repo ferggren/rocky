@@ -15,7 +15,7 @@ if (version_compare(PHP_VERSION, '5.6.0', '<=')) {
 ini_set('iconv.internal_encoding', 'UTF-8');
 ini_set('default_charset', 'UTF-8');
 
-// ?? use other way to disable caching
+// ?? need to find other way to disable caching
 header('Content-Type: text/html; charset=UTF-8');
 header('Expires: Thu, 19 Feb 1998 13:24:18 GMT');
 header('Last-Modified: '.gmdate("D, d M Y H:i:s").' GMT');
@@ -46,3 +46,6 @@ function autoload($class_name) {
 
 spl_autoload_register('autoload');
 set_error_handler(array('ErrorHandler', 'handleError'), E_ALL | E_STRICT);
+
+App::run();
+?>

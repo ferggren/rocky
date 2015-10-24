@@ -15,7 +15,7 @@ class ControllersLoader {
         }
 
         if (!class_exists($info['controller']['class'], false)) {
-            include(ROOT_PAHT . '/controllers/' . $info['controller']['file']);
+            include(ROOT_PATH . '/controllers/' . $info['controller']['file']);
 
             if (!class_exists($info['controller']['class'], false)) {
                 trigger_error('Incorrect controller ' . $info['controller']['controller']);
@@ -155,11 +155,80 @@ class ControllersLoader {
     }
 
     protected static function loadFromFileCache() {
-        return false;
+        if (!Config::get('app.cache_controllers')) {
+            return false;
+        }
+
+        if (!file_exists($tmp_path = ROOT_PATH . '/tmp/controllers.php')) {
+            return false;
+        }
+
+        include $tmp_path;
+
+        return isset($cache) ? $cache : false;
     }
 
     protected static function saveToFileCache($cache) {
-        return false;
+        if (!Config::get('app.cache_controllers')) {
+            return false;
+        }
+
+        $code = self::variable2code($cache);
+
+        if (!($file = fopen(ROOT_PATH . '/tmp/controllers.php.tmp', 'wb'))) {
+            return false;
+        }
+
+        fwrite($file, '<?php $cache = ' . $code . '; ?>');
+        fclose($file);
+
+        rename(
+            ROOT_PATH . '/tmp/controllers.php.tmp',
+            ROOT_PATH . '/tmp/controllers.php'
+        );
+
+        return true;
+    }
+
+    /**
+    * Translates variable into text variable declaration 
+    */
+    protected static function variable2code($var) {
+        $type = gettype($var);
+
+        switch ($type) {
+            case 'boolean': {
+                return $var ? 'true' : 'false';
+            }
+
+            case 'integer': {
+                return $var;
+            }
+
+            case 'double': {
+                return $var;
+            }
+
+            case 'string': {
+                return "'" . str_replace(array("\\", "'"), array("\\\\", "\\'"), $var) . "'";
+            }
+
+            case 'array': {
+                $array = array();
+
+                foreach ($var as $key => $value) {
+                    $array[] = self::variable2code($key) . '=>' . self::variable2code($value);
+                }
+
+                return 'array(' . implode(',', $array) . ')';
+            }
+
+            default: {
+                return 'NULL';
+            }
+        }
+
+        return 'NULL';
     }
 }
 ?>
