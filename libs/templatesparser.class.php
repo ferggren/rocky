@@ -9,9 +9,6 @@ class TemplatesParser {
         self::processTemplates();
         self::checkViewsParentLoop();
 
-        print_r(self::$list);
-        exit;
-
         return self::$list;
     }
 
@@ -269,6 +266,14 @@ class TemplatesParser {
             $section_content
         );
 
+        $section_content = self::parseVariables($section_content, $view);
+        $section_content = self::parseInclude($section_content, $view);
+        $section_content = self::parseController($section_content, $view);
+        $section_content = self::parseFor($section_content, $view);
+        $section_content = self::parseIf($section_content, $view);
+        $section_content = self::parseEval($section_content, $view);
+        $section_content = self::parseExport($section_content, $view);
+
         $section_content = '?>' . $section_content . '<?php';
         $section_content = str_replace('?><?php', '', $section_content);
 
@@ -285,6 +290,219 @@ class TemplatesParser {
         $method .= "\n}\n";
 
         return $method;
+    }
+
+    protected static function parseVariables($section_content, $view) {
+        $section_content = preg_replace(
+            '#(?<!@){{(.*?)}}#',
+            '<?php echo htmlspecialchars($1); ?>',
+            $section_content
+        );
+
+        $section_content = preg_replace(
+            '#(?<!@){!!(.*?)!!}#',
+            '<?php echo($1); ?>',
+            $section_content
+        );
+
+        return $section_content;
+    }
+
+    protected static function parseInclude($section_content, $view) {
+        $regexp_name = '\(?[\'"]?([a-zA-Z0-9_.-]++)[\'"]?\)?';
+        $regexp_include = "#\s*@include\s*+{$regexp_name}#s";
+
+        $section_content = preg_replace(
+            $regexp_include,
+            '<?php TemplatesLoader::printView("$1", $this->args); ?>',
+            $section_content
+        );
+
+        return $section_content;
+    }
+
+    protected static function parseController($section_content, $view) {
+        $regexp_name = '\(?[\'"]?([a-zA-Z0-9_.-]++)[\'"]?\)?';
+        $regexp_controller = "#\s*@controller\s*+{$regexp_name}#s";
+
+        $section_content = preg_replace(
+            $regexp_controller,
+            '<?php ControllersLoader::load("$1", false); ?>',
+            $section_content
+        );
+
+        return $section_content;
+    }
+
+    protected static function parseFor($section_content, $view) {
+        //for & foreach
+        $regexp = '#\s*@(for|foreach)\s*+(\((?:(?2)|.)*?\))\s*+((?:(?R)|.)*?)@end(?:\\1)(?![a-zA-Z0-9_-])#s';
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $for) {
+                $content = self::parseFor($for[3], $view);
+                $cond = $for[2];
+                $type = $for[1];
+
+                $section_content = str_replace(
+                    $for[0],
+                    "<?php {$type} {$cond} { ?>$content<?php } ?>",
+                    $section_content
+                );
+            }
+        }
+
+        //while
+        $regexp = '#\s*@while\s*+(\((?:(?1)|.)*?\))\s*+((?:(?R)|.)*?)@endwhile(?![a-zA-Z0-9_-])#s';
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $while) {
+                $content = self::parseFor($while[2], $view);
+                $cond = $while[1];
+
+                $section_content = str_replace(
+                    $while[0],
+                    "<?php while {$cond} { ?>$content<?php } ?>",
+                    $section_content
+                );
+            }
+        }
+
+        $regexp = "#\s*@forelse\s*+(\((?:(?1)|.)*?\))\s*+((?:(?R)|.)*?)@empty((?:(?R)|.)*?)@endforelse(?![a-zA-Z0-9_-])#s";
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $forelse) {
+                $content = self::parseFor($forelse[2], $view);
+                $empty = $forelse[3];
+                $cond = $forelse[1];
+
+                if(!preg_match('#^\(\s*+(.+?) as #', $cond, $var)) {
+                    trigger_error("Incorrect forelse in view {$view}");
+                    exit;
+                }
+
+                $var = $var[1];
+
+                $section_content = str_replace(
+                    $forelse[0],
+                    "<?php if(is_array($var) && count($var)) foreach {$cond} { ?>$content<?php } else { ?> $empty <?php }?>",
+                    $section_content
+                );
+            }
+        }
+
+        return $section_content;
+    }
+
+    protected static function parseIf($section_content, $view) {
+        $regexp = "#@if\s*+(\((?:(?1)|.)*?\))\s*+((?:(?R)|.)*?)@endif(?![a-zA-Z0-9_-])#s";
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $block) {
+                $content = self::parseIf($block[2], false);
+
+                $matches = preg_split(
+                    '#@((?:else(?![a-zA-Z0-9_-])|elseif\s*+(\((?:(?1)|.)*?\))))#is',
+                    $content,
+                    -1,
+                    PREG_SPLIT_DELIM_CAPTURE
+                );
+
+                if (count($matches) < 1) {
+                    return $section_content;
+                }
+
+                $blocks = array(
+                    array($block[1], array_shift($matches)),
+                );
+
+                while(count($matches)) {
+                    $type = array_shift($matches);
+
+                    if($blocks[count($blocks) - 1][0] === false) {
+                        break;
+                    }
+
+                    if($type == "else") {
+                        $blocks[] = array(
+                            false, array_shift($matches),
+                        );
+
+                        continue;
+                    }
+
+                    if(count($matches) < 2) {
+                        trigger_error("WTF?");
+                        exit;
+                    }
+
+                    $cond = array_shift($matches);
+                    $body = array_shift($matches);
+
+                    $blocks[] = array(
+                        $cond, $body,
+                    );
+                }
+
+                $if_section = "";
+
+                foreach ($blocks as $if) {
+                    if(!$if[0]) {
+                        $if_section .= "<?php else { ?>{$if[1]}<?php } ?>";
+                        continue;
+                    }
+
+                    $op = $if_section ? "elseif" : "if";
+                    $if_section .= "<?php $op {$if[0]} { ?>{$if[1]}<?php } ?>";
+                }
+
+                $section_content = str_replace(
+                    $block[0], 
+                    $if_section,
+                    $section_content
+                );
+            }
+        }
+
+        return $section_content;
+    }
+
+    protected static function parseEval($section_content, $view) {
+        $regexp = '#\s*@eval\s*+((?:(?R)|.)*?)@endeval#s';
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $eval) {
+                $section_content = str_replace(
+                    $eval[0],
+                    "<?php {$eval[1]} ?>",
+                    $section_content
+                );
+            }
+        }
+
+        return $section_content;
+    }
+
+    protected static function parseExport($section_content, $view) {
+        $regexp = '#\s*@export\s*+(\((?:(?1)|.)*?\))#s';
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $export) {
+                $code  = '<?php ';
+                $code .= 'if (is_array($__tmp = '.$export[1].')) { ';
+                $code .= 'foreach ($__tmp as $__key => $__val) { ';
+                $code .= '$this->args[$__key] = $$__key = $__val; ';
+                $code .= '} } ?>';
+
+                $section_content = str_replace(
+                    $export[0],
+                    $code,
+                    $section_content
+                );
+            }
+        }
+
+        return $section_content;
     }
 }
 ?>

@@ -9,8 +9,10 @@ class TemplatesLoader {
             return false;
         }
 
-        print_r($info);
-        exit;
+        self::prepareTemplate($view);
+
+        $class = new $info['class']($args);
+        $class->section___main();
     }
 
     public static function exists($view) {
@@ -89,9 +91,31 @@ class TemplatesLoader {
         return true;
     }
 
+    /**
+    * Loads view's class and all classes in parent tree
+    */
     protected static function prepareTemplate($view) {
-        // MAGIC
-        exit;
+        $list = self::getTemplates();
+        $include = array(
+            array($list[$view]['class'], $list[$view]['cache_path']),
+        );
+
+        $parent = $list[$view]['parent'];
+
+        while ($parent) {
+            $include[] = array($list[$parent]['class'], $list[$parent]['cache_path']);
+            $parent = $list[$parent]['parent'];
+        }
+
+        $include = array_reverse($include);
+
+        foreach ($include as $class) {
+            if (class_exists($class[0], false)) {
+                continue;
+            }
+
+            include ROOT_PATH . $class[1];
+        }
     }
 
     /**

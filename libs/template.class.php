@@ -25,7 +25,7 @@ class Template {
         }
 
         foreach ($list as $key => $value) {
-            $this->arg[$key] = $value;
+            $this->args[$key] = $value;
         }
 
         return $this;
