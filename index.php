@@ -10,9 +10,9 @@ ini_set('display_errors', 1);
 if (version_compare(PHP_VERSION, '5.6.0', '<=')) {
     ini_set('mbstring.internal_encoding', 'UTF-8');
     ini_set('mbstring.func_overload', 7);
+    ini_set('iconv.internal_encoding', 'UTF-8');
 }
 
-ini_set('iconv.internal_encoding', 'UTF-8');
 ini_set('default_charset', 'UTF-8');
 
 // ?? need to find other way to disable caching

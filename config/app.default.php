@@ -15,6 +15,6 @@ $config = array(
     // If true, templates will be cached in ./tmp/
     // Cache doesn't rebuild automaticly,
     // if changes were made, you need to manually delete ./tmp/templates*
-    'cache_templates' => true,
+    'cache_templates' => false,
 );
 ?>
