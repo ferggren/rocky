@@ -28,7 +28,7 @@ class Config {
             return self::$cache[$prefix];
         }
 
-        $file = ROOT_PATH . '/config/' . $prefix . '.php';
+        $file = ROOT_PATH . '/system/config/' . $prefix . '.php';
 
         if (!file_exists($file)) {
             trigger_error('config ' . $prefix . ' not found');

@@ -44,6 +44,8 @@ function autoload($class_name) {
     exit;
 }
 
+include(ROOT_PATH . '/system/common.php');
+
 spl_autoload_register('autoload');
 set_error_handler(array('ErrorHandler', 'handleError'), E_ALL | E_STRICT);
 

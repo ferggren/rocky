@@ -74,7 +74,7 @@ class TemplatesLoader {
             return false;
         }
 
-        $code = self::variable2code($list);
+        $code = variable2code($list);
 
         if (!($file = fopen(ROOT_PATH . '/tmp/templates.php.tmp', 'wb'))) {
             return false;
@@ -116,47 +116,6 @@ class TemplatesLoader {
 
             include ROOT_PATH . $class[1];
         }
-    }
-
-    /**
-    * Translates variable into text variable declaration 
-    */
-    protected static function variable2code($var) {
-        $type = gettype($var);
-
-        switch ($type) {
-            case 'boolean': {
-                return $var ? 'true' : 'false';
-            }
-
-            case 'integer': {
-                return $var;
-            }
-
-            case 'double': {
-                return $var;
-            }
-
-            case 'string': {
-                return "'" . str_replace(array("\\", "'"), array("\\\\", "\\'"), $var) . "'";
-            }
-
-            case 'array': {
-                $array = array();
-
-                foreach ($var as $key => $value) {
-                    $array[] = self::variable2code($key) . '=>' . self::variable2code($value);
-                }
-
-                return 'array(' . implode(',', $array) . ')';
-            }
-
-            default: {
-                return 'NULL';
-            }
-        }
-
-        return 'NULL';
     }
 }
 ?>

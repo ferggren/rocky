@@ -173,7 +173,7 @@ class ControllersLoader {
             return false;
         }
 
-        $code = self::variable2code($cache);
+        $code = variable2code($cache);
 
         if (!($file = fopen(ROOT_PATH . '/tmp/controllers.php.tmp', 'wb'))) {
             return false;
@@ -188,47 +188,6 @@ class ControllersLoader {
         );
 
         return true;
-    }
-
-    /**
-    * Translates variable into text variable declaration 
-    */
-    protected static function variable2code($var) {
-        $type = gettype($var);
-
-        switch ($type) {
-            case 'boolean': {
-                return $var ? 'true' : 'false';
-            }
-
-            case 'integer': {
-                return $var;
-            }
-
-            case 'double': {
-                return $var;
-            }
-
-            case 'string': {
-                return "'" . str_replace(array("\\", "'"), array("\\\\", "\\'"), $var) . "'";
-            }
-
-            case 'array': {
-                $array = array();
-
-                foreach ($var as $key => $value) {
-                    $array[] = self::variable2code($key) . '=>' . self::variable2code($value);
-                }
-
-                return 'array(' . implode(',', $array) . ')';
-            }
-
-            default: {
-                return 'NULL';
-            }
-        }
-
-        return 'NULL';
     }
 }
 ?>
