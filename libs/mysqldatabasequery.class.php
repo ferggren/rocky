@@ -140,6 +140,13 @@ class MySQLDatabaseQuery extends DatabaseQuery {
     }
 
     public function escapeFieldName($name) {
+        if (($pos = strpos($name, '.')) !== false) {
+            $table = substr($name, 0, $pos);
+            $name = substr($name, $pos + 1);
+
+            return '`' . $this->escape($table) . '`.`' . $this->escape($name) . '`';
+        }
+
         return '`' . $this->escape($name) . '`';
     }
 
@@ -148,6 +155,14 @@ class MySQLDatabaseQuery extends DatabaseQuery {
     }
 
     public function escapeTable($table) {
+        if (strpos($table, ' ') !== false) {
+            if (!preg_match('#^([0-9a-zA-Z_-]++)\s++([0-9a-zA-Z_-_]++)$#', $table, $data)) {
+                return '`' . $this->escape($table) . '`';
+            }
+
+            return '`' . $this->escape($data[1]) . '` `' . $this->escape($data[2]) . '`';
+        }
+
         return '`' . $this->escape($table) . '`';
     }
 }

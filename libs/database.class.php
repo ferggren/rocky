@@ -4,6 +4,9 @@ class Database {
     protected static $primary_key = false;
     protected static $timestamps = false;
 
+    // timestamp or date
+    protected static $timestamps_type = 'timestamp';
+
     protected $fields_current = false;
     protected $fields_new = false;
     protected $current_table = false;
@@ -186,27 +189,31 @@ class Database {
         return !!(is_array($this->fields_current) && count($this->fields_current));
     }
 
-    public static function where($field, $operator, $condition) {
+    public static function where($field, $operator, $condition, $cond_type = 'variable') {
         return self::getDatabaseQuery()->where(
             $field,
             $operator,
-            $condition
+            $condition,
+            false,
+            $cond_type
         );
     }
 
-    public static function whereAnd($field, $operator, $condition) {
+    public static function whereAnd($field, $operator, $condition, $cond_type = 'variable') {
         return self::getDatabaseQuery()->whereAnd(
             $field,
             $operator,
-            $condition
+            $condition,
+            $cond_type
         );
     }
 
-    public static function whereOr($field, $operator, $condition) {
+    public static function whereOr($field, $operator, $condition, $cond_type = 'variable') {
         return self::getDatabaseQuery()->whereOr(
             $field,
             $operator,
-            $condition
+            $condition,
+            $cond_type
         );
     }
 
@@ -215,17 +222,17 @@ class Database {
     }
 
     public static function find() {
-        $args = func_get_args();
-        $query = self::getDatabaseQuery();
-
         return call_user_func_array(
-            array($query, 'find'),
-            $args
+            array(self::getDatabaseQuery(), 'find'),
+            func_get_args()
         );
     }
 
-    public static function from($table) {
-        return self::getDatabaseQuery()->from($table);
+    public static function from() {
+        return call_user_func_array(
+            array(self::getDatabaseQuery(), 'from'),
+            func_get_args()
+        );
     }
 
     public static function get() {
@@ -375,7 +382,13 @@ class Database {
         $insert_fields = $this->fields_new;
 
         if (static::$timestamps) {
-            $insert_fields['created_at'] = date('Y.m.d H:i:s');
+            if (self::$timestamps_type == 'timestamp') {
+                $insert_fields['created_at'] = time();
+            }
+            else {
+                $insert_fields['created_at'] = date('Y.m.d H:i:s');
+            }
+
             $insert_fields['updated_at'] = $insert_fields['created_at'];
         }
 
@@ -412,7 +425,12 @@ class Database {
         $update_fields = array();
 
         if (static::$timestamps) {
-            $update_fields['updated_at'] = date('Y.m.d H:i:s');
+            if (self::$timestamps_type == 'timestamp') {
+                $update_fields['updated_at'] = time();
+            }
+            else {
+                $update_fields['updated_at'] = date('Y.m.d H:i:s');
+            }
         }
 
         $fields_current = $this->fields_current;

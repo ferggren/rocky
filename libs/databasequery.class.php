@@ -32,18 +32,37 @@ abstract class DatabaseQuery {
         }
     }
 
-    public function setTable($table) {
-        if (!$table) {
-            return $this;
-        }
+    public function setTable() {
+        $args = func_get_args();
+        $tables = array();
 
-        if (!is_array($table)) {
-            $table = array($table);
+        foreach ($args as $arg) {
+            if (!$arg) {
+                continue;
+            }
+
+            if (!is_array($arg)) {
+                $tables[] = $arg;
+                continue;
+            }
+
+            foreach ($arg as $_arg) {
+                if (is_array($_arg)) {
+                    continue;
+                }
+
+                $tables[] = $_arg;
+            }
         }
 
         $this->tables = array();
+        $this->current_table = false;
 
-        foreach ($table as $t) {
+        if (!count($tables)) {
+            return $this;
+        }
+
+        foreach ($tables as $t) {
             if (!preg_match('#^([a-zA-Z0-9_-]+)(?:\s++[a-zA-Z0-9_-]++)?$#', $t, $data)) {
                 trigger_error('incorrect table name: ' . $t);
                 exit;
@@ -53,15 +72,18 @@ abstract class DatabaseQuery {
             $this->tables[] = $t;
         }
 
-        if (count($table) > 1) {
+        if (count($tables) > 1) {
             $this->current_table = false;
         }
 
         return $this;
     }
 
-    public function from($table) {
-        return $this->setTable($table);
+    public function from() {
+        return call_user_func_array(
+            array($this, 'setTable'),
+            func_get_args()
+        );
     }
 
     public function find() {
@@ -181,7 +203,7 @@ abstract class DatabaseQuery {
             return false;
         }
 
-        return $rows[0]['count'];
+        return (int)($rows[0]['count']);
     }
 
     public function update($attributes) {
@@ -246,30 +268,31 @@ abstract class DatabaseQuery {
         return !!$this->query($query);
     }
 
-    public function where($field, $operator, $arg, $type = 'AND') {
+    public function where($field, $comparison_operator, $arg, $logical_operator = 'AND', $arg_type = 'variable') {
         $this->where_raw = '';
 
-        if (!in_array($operator, array('<', '<=', '=', '>=', '>', '<>', 'LIKE'))) {
-            trigger_error('incorrect operator: ' . $operator);
+        if (!in_array($comparison_operator, array('<', '<=', '=', '>=', '>', '<>', 'LIKE'))) {
+            trigger_error('incorrect operator: ' . $comparison_operator);
             exit;
         }
 
         $this->where[] = array(
             'field' => $field,
-            'operator' => $operator,
+            'comparison_operator' => $comparison_operator,
+            'logical_operator' => $logical_operator,
             'arg' => $arg,
-            'type' => $type,
+            'arg_type' => $arg_type == 'variable' ? 'variable' : 'field',
         );
 
         return $this;
     }
 
-    public function whereOr($field, $operator, $arg) {
-        return $this->where($field, $operator, $arg, 'OR');
+    public function whereOr($field, $operator, $arg, $arg_type = 'variable') {
+        return $this->where($field, $operator, $arg, 'OR', $arg_type);
     }
 
-    public function whereAnd($field, $operator, $arg) {
-        return $this->where($field, $operator, $arg, 'AND');
+    public function whereAnd($field, $operator, $arg, $arg_type = 'variable') {
+        return $this->where($field, $operator, $arg, 'AND', $arg_type);
     }
 
     public function whereRaw($query, $args) {
@@ -387,12 +410,18 @@ abstract class DatabaseQuery {
 
         foreach ($this->where as $where) {
             if ($query) {
-                $query .= ' ' . ($where['type'] == 'OR' ? 'OR' : 'AND') . ' ';
+                $query .= ' ' . ($where['logical_operator'] == 'OR' ? 'OR' : 'AND') . ' ';
             }
 
             $query .= $this->escapeFieldName($where['field']);
-            $query .= ' ' . $where['operator'] . ' ';
-            $query .= $this->escapeFieldValue($where['arg']);
+            $query .= ' ' . $where['comparison_operator'] . ' ';
+
+            if ($where['arg_type'] == 'variable') {
+                $query .= $this->escapeFieldValue($where['arg']);
+            }
+            else {
+                $query .= $this->escapeFieldName($where['arg']);
+            }
         }
 
         return 'WHERE ' . $query;
