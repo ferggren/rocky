@@ -16,5 +16,15 @@ $config = array(
     // Cache doesn't rebuild automaticly,
     // if changes were made, you need to manually delete ./tmp/templates*
     'cache_templates' => false,
+
+    // Salt will be used to make and check session session stuff
+    'session_salt' => 'random_salt_here',
+
+    // How often session will update user's latest activity timestamp
+    // Set false to disable
+    'session_pulse' => 300,
+
+    // Base domain for cookies
+    'cookie_domain' => 'example.com',
 );
 ?>

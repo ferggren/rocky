@@ -39,4 +39,35 @@ function variable2code($var) {
 
     return 'NULL';
 }
+
+/**
+* Converts ip from string to decimal form
+*/
+
+function ip2decimal($ip) {
+    if (!preg_match('#^((?:\d{1,3}\.){3}\d{1,3})#', trim($ip), $data)) {
+        return 0;
+    }
+
+    $ip = explode('.', $data[1]);
+
+    return $ip[0] + ($ip[1] << 8) + ($ip[2] << 16) + ($ip[3] << 24);
+}
+
+/**
+* Converts ip from decimal form to string
+*/
+function decimal2ip($ip) {
+    $ip = (int)$ip;
+
+    return implode(
+        '.',
+        array(
+            ($ip & 0x000000FF),
+            ($ip & 0x0000FF00) >> 8,
+            ($ip & 0x00FF0000) >> 16,
+            ($ip & 0xFF000000) >> 24,
+        )
+    );
+}
 ?>
