@@ -6,14 +6,23 @@ class Database {
 
     protected $fields_current = false;
     protected $fields_new = false;
+    protected $current_table = false;
 
-    public function __construct($fields_new = array()) {
-        if (!is_array($fields_new)) {
-            $fields_new = array();
-        }
-
+    public function __construct($arg = false) {
+        $this->fields_new = array();
         $this->fields_current = array();
-        $this->fields_new = $fields_new;
+        $this->current_table = false;
+
+        if (self::__is_model()) {
+            if (is_array($arg)) {
+                $this->fields_new = $arg;
+            }
+
+            $this->current_table = static::$table;
+        }
+        else if (is_string($arg)) {
+            $this->current_table = $arg;
+        }
     }
 
     public function __get($name) {
@@ -33,14 +42,14 @@ class Database {
     }
 
     public function initRow($fields) {
-        $this->fields_current = arary();
+        $this->fields_current = array();
         $this->fields_new = array();
 
         if (!is_array($fields)) {
             return false;
         }
 
-        if (count($fileds) <= 0) {
+        if (count($fields) <= 0) {
             return false;
         }
 
@@ -125,15 +134,19 @@ class Database {
     * Save changes to model
     */
     public function save() {
-        if (!is_array($this->fields_current)) {
+        if ($this->exists()) {
+            if (!is_array($this->fields_current)) {
+                return false;
+            }
+
+            return $this->updateRow();
+        }
+
+        if (!is_array($this->fields_new)) {
             return false;
         }
 
-        if (!is_array($this->fiedls_new)) {
-            return false;
-        }
-
-        return $this->exists() ? $this->updateRow() : $this->insertRow();
+        return $this->insertRow();
     }
 
     /**
@@ -160,7 +173,7 @@ class Database {
     * Returns true if row exists in table
     */
     public function exists() {
-        $table = static::$table;
+        $table = $this->current_table;
 
         if (!is_array($table) && !$table) {
             return false;
@@ -211,8 +224,8 @@ class Database {
         );
     }
 
-    public static function from($tables) {
-        return self::getDatabaseQuery()->from($tables);
+    public static function from($table) {
+        return self::getDatabaseQuery()->from($table);
     }
 
     public static function get() {
@@ -232,6 +245,10 @@ class Database {
     }
 
     public static function destroy() {
+        if (!self::__is_model()) {
+            return false;
+        }
+
         $primary_keys = array();
 
         if (!is_array($primary_keys)) {
@@ -312,20 +329,25 @@ class Database {
     }
 
     protected static function getDatabaseQuery() {
-        $databaseType = Config::get('database.default');
+        $database_type = Config::get('database.default');
 
-        exit('asdasd');
+        $table = false;
+        $primary_key = false;
+        $view = false;
 
-        if ($databaseType == 'mysql') {
-            // return new MySqlDatabaseQuery(
-            //     static::$table,
-            //     static::$primaryKey,
-            //     get_called_class()
-            // );
+        $class = get_called_class();
+
+        if (strtolower($class) != 'database') {
+            $table = static::$table;
+            $primary_key = static::$primary_key;
+            $view = $class;
         }
 
-        user_error('Incorrect default DB:' . $databaseType);
-        exit;
+        if ($database_type == 'mysql') {
+            return new MySQLDatabaseQuery($table, $primary_key, $view);
+        }
+
+        user_error('Incorrect default DB:' . $database_type);
     }
 
     /**
@@ -336,14 +358,18 @@ class Database {
             return false;
         }
 
-        $table = static::$table;
+        $table = $this->current_table;
 
         if (!is_array($table) && !$table) {
             return false;
         }
 
-        if (is_array($table) && count($table) != 1) {
-            return false;
+        if (is_array($table)) {
+            if (count($table) != 1) {
+                return false;
+            }
+
+            $table = $table[0];
         }
 
         $insert_fields = $this->fields_new;
@@ -358,6 +384,7 @@ class Database {
         }
 
         $query = self::getDatabaseQuery();
+        $query->setTable($table);
 
         if (!$query->insert($insert_fields)) {
             return false;
@@ -419,7 +446,7 @@ class Database {
     * Makes where query for delete and update functions
     */
     protected function __makeWhereQuery() {
-        $table = static::$table;
+        $table = $this->current_table;
         $keys = static::$primary_key;
 
         if (!is_array($table) && !$table) {
@@ -434,7 +461,12 @@ class Database {
             $table = $table[0];
         }
 
-        $query = Database::from($table);
+        $query = Database::getDatabaseQuery();
+        $query->setTable($table);
+
+        if (!$keys) {
+            $keys = $query->getPrimaryKey();
+        }
 
         if (!is_array($keys)) {
             $keys = $keys ? array($keys) : array();
