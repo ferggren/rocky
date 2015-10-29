@@ -9,12 +9,14 @@ class User {
     }
 
     public static function __callStatic($name, $fuckoff) {
-        if (preg_match('#^user_[0-9a-z_-]++$#', $name, $data)) {
+        if (preg_match('#^get_([0-9a-z_-]++)$#', $name, $data)) {
             if (!self::$user) {
                 return false;
             }
 
-            return self::$user->data[0];
+            $key = $data[1];
+
+            return self::$user->$key;
         }
     }
 

@@ -1,3 +1,4 @@
 app.php
 database.php
+auth.php
 !.gitignore
