@@ -1,5 +1,4 @@
 <?php
-// some default stuff
 date_default_timezone_set('UTC');
 define('ROOT_PATH', dirname(__FILE__) . '/');
 chdir(ROOT_PATH);
@@ -31,7 +30,7 @@ function autoload($class_name) {
         return;
     }
 
-    user_error('class ' . $class_name . ' not found');
+    trigger_error('class ' . $class_name . ' not found');
     exit;
 }
 
