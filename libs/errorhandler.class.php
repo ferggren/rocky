@@ -10,8 +10,7 @@ class ErrorHandler {
             $error = 'Something went terribly wrong';
         }
 
-        // disable caching?
-        // ?
+        disableBrowserCaching();
 
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             self::showAjaxError($error);
@@ -24,6 +23,8 @@ class ErrorHandler {
     }
 
     protected static function showHtmlError($error) {
+        header('Content-Type: text/html; charset=UTF-8');
+
         echo '<!DOCTYPE html>';
         echo '<html lang="en">';
         echo '<head>';
@@ -47,7 +48,7 @@ class ErrorHandler {
     }
 
     protected static function showAjaxError($error) {
-        header('Content-type: application/json; charset=utf-8');
+        header('Content-type: application/json; charset=UTF-8');
 
         if (Config::get('app.debug') && count($stack = self::getBacktrace())) {
             $error = $stack[0]['file'] . ' => ' . $error;

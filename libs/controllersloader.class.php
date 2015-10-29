@@ -1,6 +1,7 @@
 <?php
 class ControllersLoader {
     protected static $cache = false;
+    protected static $url_cache = array();
     protected static $stack = array();
 
     /**
@@ -46,7 +47,40 @@ class ControllersLoader {
         return !!self::getController($url);
     }
 
+    public static function getAccessInfo($url) {
+        $info = self::getController($url);
+        $ret = array();
+
+        if (!$info) {
+            return $ret;
+        }
+
+        $class = $info['controller']['class'];
+
+        if (!class_exists($class, false)) {
+            include (ROOT_PATH . '/controllers/' . $info['controller']['file']);
+        }
+
+        if (isset($class::$user_auth)) {
+            $ret['auth'] = $class::$user_auth;
+        }
+
+        if (isset($class::$user_access_level)) {
+            $ret['access_level'] = $class::$user_access_level;
+        }
+
+        if (isset($class::$controller_type)) {
+            $ret['type'] = $class::$controller_type;
+        }
+
+        return $ret;
+    }
+
     protected static function getController($url) {
+        if (isset(self::$url_cache[$url])) {
+            return self::$url_cache[$url];
+        }
+
         $controllers_list = self::getControllers();
 
         $is_valid = true;
@@ -124,7 +158,7 @@ class ControllersLoader {
             $action = strtolower(array_shift($controller_args));
         }
 
-        return array(
+        return self::$url_cache[$url] = array(
             'controller' => array(
                 'file' => $info['file'],
                 'class' => $info['class'],

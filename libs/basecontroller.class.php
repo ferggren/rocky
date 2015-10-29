@@ -2,6 +2,16 @@
 class BaseController {
     public function __construct() {
 
+        static $headers = false;
+        if (!$headers) {
+            $headers = true;
+            static::sendDefaultHeaders();
+        }
+    }
+
+    protected static function sendDefaultHeaders() {
+        disableBrowserCaching();
+        header('Content-Type: text/html; charset=UTF-8');
     }
 
     /**

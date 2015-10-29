@@ -15,15 +15,6 @@ if (version_compare(PHP_VERSION, '5.6.0', '<=')) {
 
 ini_set('default_charset', 'UTF-8');
 
-// ?? need to find other way to disable caching
-header('Content-Type: text/html; charset=UTF-8');
-header('Expires: Thu, 19 Feb 1998 13:24:18 GMT');
-header('Last-Modified: '.gmdate("D, d M Y H:i:s").' GMT');
-header('Cache-Control: no-cache, must-revelidate');
-header('Cache-Control: post-check=0,pre-check=0');
-header('Cache-Control: max-age=0');
-header('Pragma: no-cache');
-
 function autoload($class_name) {
     $class_name = strtolower($class_name);
 

@@ -7,6 +7,9 @@ $config = array(
     // (if empty or incorrect controller was passed in url)
     'default_controller' => 'index',
 
+    // Controller that will be loaded if user needs authentication
+    'auth_controller' => 'auth',
+
     // If true, controllers tree will be cached in ./tmp/
     // Cache doesn't rebuild automaticly,
     // if changes were made, you need to manually delete ./tmp/controllers*
@@ -26,5 +29,20 @@ $config = array(
 
     // Base domain for cookies
     'cookie_domain' => 'example.com',
+
+    // Access rules for specific urls
+    // Also, access can be specified into controller itself (and also that form has a higher priority)
+    // each success rule rewrite previous ones, so be careful with rules order
+    'url_rules' => array(
+        // default rule
+        '#^(?:/|index)#' => array('auth' => false, 'access_level' => false, 'type' => 'default'),
+
+        // rule for ajax controllers
+        '#^/ajax/#' => array('type' => 'ajax'),
+
+        // rule for admin
+        '#^/admin#' => array('auth' => true, 'access_level' => 'admin'),
+        '#^/ajax/admin/#' => array('auth' => true, 'access_level' => 'admin'),
+    ),
 );
 ?>
