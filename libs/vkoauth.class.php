@@ -73,12 +73,12 @@ class VkOAuth extends OAuthBase {
 
         $photo = '';
 
-        if (isset($user_info['photo_200'])) {
-            $photo = $user_info['photo_200'];
-        }
-
         if (isset($user_info['photo_200_orig'])) {
             $photo = $user_info['photo_200_orig'];
+        }
+
+        if (isset($user_info['photo_200'])) {
+            $photo = $user_info['photo_200'];
         }
 
         $entry = new Database(static::$table);
