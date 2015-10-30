@@ -44,5 +44,11 @@ $config = array(
         '#^/admin#' => array('auth' => true, 'access_level' => 'admin'),
         '#^/ajax/admin/#' => array('auth' => true, 'access_level' => 'admin'),
     ),
+
+    // Log unauthorized requests
+    'log_unauthorized_requests' => false,
+
+    // Log user auth
+    'log_users_auth' => false,
 );
 ?>

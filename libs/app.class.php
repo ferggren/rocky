@@ -65,6 +65,15 @@ class App {
             );
 
             echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+
+            if (!$auth_redirect && Config::get('app.log_unauthorized_requests')) {
+                UsersLogger::logAction(
+                    User::isAuthenticated() ? User::get_user_id() : 0,
+                    'unauthorized_request',
+                    $url
+                );
+            }
+
             exit;
         }
 
@@ -74,8 +83,19 @@ class App {
                 exit;
             }
 
+            $url = self::$url;
+
             self::$url = Config::get('app.default_controller');
             self::checkUrlAccess();
+
+            if (Config::get('app.log_unauthorized_requests')) {
+                UsersLogger::logAction(
+                    User::isAuthenticated() ? User::get_user_id() : 0,
+                    'unauthorized_request',
+                    $url
+                );
+            }
+
             return;
         }
 

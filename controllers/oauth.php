@@ -36,10 +36,24 @@ class OAuth_Controller extends BaseController {
             exit;
         }
 
+        if (!($info = $oauth->getUserInfo())) {
+            self::OAuthFailure();
+            exit;
+        }
+
         if (($user_id = $oauth->getLinkedUser()) > 0) {
             if (!User::isAuthenticated()) {
                 Session::login($user_id);
-                return self::actionSuccess();
+
+                if (Config::get('app.log_users_auth')) {
+                    UsersLogger::logAction(
+                        $user_id,
+                        'oauth',
+                        $prefix.':'.$info['oauth_id']
+                    );
+                }
+
+                return self::OAuthSuccess();
             }
 
             if (User::get_user_id() == $user_id) {
@@ -53,11 +67,6 @@ class OAuth_Controller extends BaseController {
             return $this->actionSuccess();
         }
 
-        if (!($info = $oauth->getUserInfo())) {
-            self::OAuthFailure();
-            exit;
-        }
-
         if (User::isAuthenticated()) {
             if (!$oauth->linkAccount(User::get_user_id())) {
                 self::OAuthFailure();
@@ -68,6 +77,14 @@ class OAuth_Controller extends BaseController {
                 $photo = $oauth->exportPhoto();
                 $user->photo = $photo ? $photo : '';
                 $user->save();
+            }
+
+            if (Config::get('app.log_users_auth')) {
+                UsersLogger::logAction(
+                    User::get_user_id(),
+                    'oauth',
+                    $prefix.':'.$info['oauth_id']
+                );
             }
 
             self::OAuthSuccess();
@@ -94,6 +111,15 @@ class OAuth_Controller extends BaseController {
         }
 
         Session::login($user->user_id);
+
+        if (Config::get('app.log_users_auth')) {
+            UsersLogger::logAction(
+                $user->user_id,
+                'oauth',
+                $prefix.':'.$info['oauth_id']
+            );
+        }
+
         self::OAuthSuccess();
     }
 
