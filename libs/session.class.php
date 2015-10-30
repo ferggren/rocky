@@ -105,10 +105,13 @@ class Session {
             Config::get('app.cookie_domain')
         );
 
+        $user_ip = ip2decimal($_SERVER['REMOTE_ADDR']);
+
         $session = new Sessions;
         $session->session_id = $session_id;
         $session->user_id = 0;
-        $session->user_ip = ip2decimal($_SERVER['REMOTE_ADDR']);
+        $session->user_ip = $user_ip;
+        $session->user_latest_ip = $user_ip;
         $session->save();
 
         self::$session = $session;
@@ -139,6 +142,13 @@ class Session {
 
         if (!($session = Sessions::find($session_id))) {
             return false;
+        }
+
+        $user_ip = ip2decimal($_SERVER['REMOTE_ADDR']);
+        
+        if ($session->user_latest_ip != $user_ip) {
+            $session->user_latest_ip = $user_ip;
+            $session->save();
         }
 
         $pulse = Config::get('app.session_pulse');
