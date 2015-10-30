@@ -1,9 +1,11 @@
 <?php
 class TemplatesParser {
     protected static $list = array();
+    protected static $build_hash = false;
 
     public static function parse() {
         self::$list = array();
+        self::$build_hash = md5(microtime(true));
 
         self::loadTemplates();
         self::processTemplates();
@@ -273,6 +275,7 @@ class TemplatesParser {
         $section_content = self::parseIf($section_content, $view);
         $section_content = self::parseEval($section_content, $view);
         $section_content = self::parseExport($section_content, $view);
+        $section_content = self::parseBuildHash($section_content, $view);
 
         $section_content = '?>' . $section_content . '<?php';
         $section_content = str_replace('?><?php', '', $section_content);
@@ -501,6 +504,18 @@ class TemplatesParser {
                 );
             }
         }
+
+        return $section_content;
+    }
+
+    protected static function parseBuildHash($section_content, $view) {
+        $regexp = '#@build_hash(?!\S)#s';
+
+        $section_content = preg_replace(
+            $regexp,
+            self::$build_hash,
+            $section_content
+        );
 
         return $section_content;
     }
