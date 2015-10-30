@@ -509,7 +509,7 @@ class TemplatesParser {
     }
 
     protected static function parseBuildHash($section_content, $view) {
-        $regexp = '#@build_hash(?!\S)#s';
+        $regexp = '#@build_hash(?![0-9a-zA-Z])#s';
 
         $section_content = preg_replace(
             $regexp,
