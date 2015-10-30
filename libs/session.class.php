@@ -39,6 +39,48 @@ class Session {
         return self::$session->user_id;
     }
 
+    public static function getUserIp() {
+        static $ip = false;
+
+        if ($ip !== false) {
+            return $ip;
+        }
+
+        $headers = array(
+            'REMOTE_ADDR',
+            'HTTP_X_COMING_FROM',
+            'HTTP_VIA',
+            'HTTP_FORWARDED',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_X_FORWARDED_FOR',
+        );
+
+        foreach($headers as $header) {
+            $ip = false;
+            
+            if(isset($_SERVER) && isset($_SERVER[$header])) {
+                $ip = $_SERVER[$header];
+            }
+            
+            else if(isset($_ENV) && isset($_ENV[$header])) {
+                $ip = $_ENV[$header];
+            }
+
+            if($ip == false) {
+                continue;
+            }
+            
+            if(!preg_match('#(?<!\d)\d{1,3}(?:\.\d{1,3}){3}(?!\d)#', $ip, $data)) {
+                continue;
+            }
+
+            return $ip = $data[0];
+        }
+
+        return $ip = false;
+    }
+
     public static function login($user_id) {
         self::init();
 
@@ -83,7 +125,7 @@ class Session {
                 array(
                     $salt,
                     microtime(),
-                    $_SERVER['REMOTE_ADDR'],
+                    self::getUserIp(),
                     $salt
                 )
             );
@@ -105,7 +147,7 @@ class Session {
             Config::get('app.cookie_domain')
         );
 
-        $user_ip = ip2decimal($_SERVER['REMOTE_ADDR']);
+        $user_ip = ip2decimal(self::getUserIp());
 
         $session = new Sessions;
         $session->session_id = $session_id;
@@ -144,7 +186,7 @@ class Session {
             return false;
         }
 
-        $user_ip = ip2decimal($_SERVER['REMOTE_ADDR']);
+        $user_ip = ip2decimal(self::getUserIp());
         
         if ($session->user_latest_ip != $user_ip) {
             $session->user_latest_ip = $user_ip;
