@@ -8,7 +8,7 @@ class UsersLogger {
 
         $row = new Database('users_logs');
         $row->user_id = $user_id;
-        $row->user_ip = ip2decimal(Session::getUserIp());
+        $row->user_ip = ip2decimal(Session::getSessionIp());
         $row->log_type_id = self::type2id($action_type);
         $row->log_desc = iconv_substr($action_desc, 0, 200);
         $row->log_time = time();

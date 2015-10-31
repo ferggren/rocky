@@ -39,7 +39,7 @@ class Session {
         return self::$session->user_id;
     }
 
-    public static function getUserIp() {
+    public static function getSessionIp() {
         static $ip = false;
 
         if ($ip !== false) {
@@ -125,7 +125,7 @@ class Session {
                 array(
                     $salt,
                     microtime(),
-                    self::getUserIp(),
+                    self::getSessionIp(),
                     $salt
                 )
             );
@@ -147,13 +147,13 @@ class Session {
             Config::get('app.cookie_domain')
         );
 
-        $user_ip = ip2decimal(self::getUserIp());
+        $session_ip = ip2decimal(self::getSessionIp());
 
         $session = new Sessions;
         $session->session_id = $session_id;
         $session->user_id = 0;
-        $session->user_ip = $user_ip;
-        $session->user_latest_ip = $user_ip;
+        $session->session_ip = $session_ip;
+        $session->session_latest_ip = $session_ip;
         $session->save();
 
         self::$session = $session;
@@ -186,16 +186,23 @@ class Session {
             return false;
         }
 
-        $user_ip = ip2decimal(self::getUserIp());
+        $session_ip = ip2decimal(self::getSessionIp());
+
+        $changed = false;
         
-        if ($session->user_latest_ip != $user_ip) {
-            $session->user_latest_ip = $user_ip;
-            $session->save();
+        if ($session->session_latest_ip != $session_ip) {
+            $session->session_latest_ip = $session_ip;
+            $changed = true;
         }
 
         $pulse = Config::get('app.session_pulse');
 
-        if ($pulse !== false && (time() - $session->updated_at) > $pulse) {
+        if ($pulse !== false && (time() - $session->session_latest_activity) > $pulse) {
+            $changed = true;
+            $session->session_latest_activity = time();
+        }
+
+        if ($changed) {
             $session->save();
         }
 

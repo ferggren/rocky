@@ -23,12 +23,11 @@ class Logger {
             return false;
         }
 
-        $user_ip = 'cli';
-        $user_id = 0;
-
-        if (isset($_SERVER['REMOTE_ADDR'])) {
-            $user_ip = preg_replace('#[^\d.]#', '', $_SERVER['REMOTE_ADDR']);
+        if(!($user_ip = Session::getSessionIp())) {
+            $user_ip = 'cli';
         }
+
+        $user_id = 0;
 
         $backtrace = self::getBacktrace();
         

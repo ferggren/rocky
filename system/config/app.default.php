@@ -50,5 +50,13 @@ $config = array(
 
     // Log user auth
     'log_users_auth' => false,
+
+    // If user doesn't have a photo,
+    // User::get_photo() and $user->get_photo() will return that path
+    'user_photo_placeholder' => '/images/path_to_placeholder.png',
+
+    // How often user's latest activity will be updated
+    // Set false to disable
+    'users_pulse' => 60,
 );
 ?>

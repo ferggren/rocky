@@ -49,4 +49,12 @@ class Users extends Database {
 
         return !!$query->count();
     }
+
+    public function getPhoto() {
+        if ($this->user_photo) {
+            return $this->user_photo;
+        }
+
+        return Config::get('app.user_photo_placeholder');
+    }
 }
