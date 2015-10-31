@@ -70,7 +70,7 @@ class App {
                 UsersLogger::logAction(
                     User::isAuthenticated() ? User::get_user_id() : 0,
                     'unauthorized_request',
-                    $url
+                    self::$url
                 );
             }
 
