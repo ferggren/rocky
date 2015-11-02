@@ -271,7 +271,7 @@ abstract class DatabaseQuery {
     public function where($field, $comparison_operator, $arg, $logical_operator = 'AND', $arg_type = 'variable') {
         $this->where_raw = '';
 
-        if (!in_array($comparison_operator, array('<', '<=', '=', '>=', '>', '<>', 'LIKE'))) {
+        if (!in_array($comparison_operator, array('<', '<=', '=', '>=', '>', '<>', '!=', 'LIKE'))) {
             trigger_error('incorrect operator: ' . $comparison_operator);
             exit;
         }
