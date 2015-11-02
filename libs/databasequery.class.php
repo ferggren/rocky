@@ -338,7 +338,9 @@ abstract class DatabaseQuery {
     }
 
     public function orderBy($order_field, $order_type = 'asc') {
-        if (!in_array(strtolower($order_type), array('asc', 'desc'))) {
+        $order_type = strtolower($order_type);
+
+        if (!in_array($order_type, array('asc', 'desc'))) {
             trigger_error('incorrect order type: ' . $order_type);
             exit;
         }
