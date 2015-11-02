@@ -459,7 +459,7 @@ abstract class DatabaseQuery {
                 $query .= ', ';
             }
 
-            $query = $this->escapeFieldName($order_by['field']) . ' ' . $order_by['type'];
+            $query .= $this->escapeFieldName($order_by['field']) . ' ' . $order_by['type'];
         }
 
         return 'ORDER BY ' . $query;
