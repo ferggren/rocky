@@ -151,6 +151,10 @@ class MySQLDatabaseQuery extends DatabaseQuery {
     }
 
     public function escapeFieldValue($value) {
+        if (is_null($value)) {
+            return 'NULL';
+        }
+        
         return '"' . $this->escape($value) . '"';
     }
 
