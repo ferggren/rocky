@@ -12,12 +12,14 @@ $config = array(
 
     // If true, controllers tree will be cached in ./tmp/
     // Cache doesn't rebuild automaticly,
-    // if changes were made, you need to manually delete ./tmp/controllers*
     'cache_controllers' => false,
+
+    // If true, scripts will be cached in ./tmp/
+    // Cache doesn't rebuild automaticly,
+    'cache_scripts' => false,
 
     // If true, templates will be cached in ./tmp/
     // Cache doesn't rebuild automaticly,
-    // if changes were made, you need to manually delete ./tmp/templates*
     'cache_templates' => false,
 
     // Salt will be used to make and check session session stuff
