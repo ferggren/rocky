@@ -29,14 +29,29 @@ class ControllersParser {
                 continue;
             }
 
-            if (!preg_match('#^([a-z][a-z0-9]*)\.php$#', $file, $data)) {
+            if (!preg_match('#^([a-z][a-zA-Z0-9]*)\.php$#', $file, $data)) {
                 continue;
             }
 
-            $name = $data[1];
+            $name = strtolower($data[1]);
 
-            $uri = preg_replace('#/'.$name.'/#', '/', $prefix) . $name;
-            $uri = trim($uri, '/');
+            $uri = preg_replace(
+                '#/'.$name.'/$#',
+                '/',
+                strtolower($prefix)
+            );
+
+            $uri = trim($uri . $name, '/');
+
+            if (isset($list[$uri])) {
+                trigger_error(sprintf(
+                    "dupblicate controller %s:\n- %s\n- %s",
+                    $uri,
+                    $prefix . $file,
+                    $list[$uri]['file']
+                ));
+                exit;
+            }
 
             $list[$uri] = self::processController($uri, $prefix . $file);
         }
@@ -49,23 +64,42 @@ class ControllersParser {
             'class' => str_replace('/', '', $name) . '_controller',
         );
 
+        if (class_exists($info['class'], false)) {
+            trigger_error(sprintf(
+                "class %s for controller %s is already exists",
+                $info['class'],
+                $info['uri']
+            ));
+            exit;
+        }
+
         include(ROOT_PATH . '/controllers/' . $file);
 
         if (!class_exists($info['class'], false)) {
-            trigger_error("file {$file} doesn't contains class {$info['class']}");
+            trigger_error(sprintf(
+                "file %s doesn't contains class %s",
+                $info['file'],
+                $info['class']
+            ));
             exit;
         }
 
         $ref = new ReflectionClass($info['class']);
         if (!$ref->isSubclassOf('BaseController')) {
-            trigger_error("class {$info['class']} must extends class BaseController");
+            trigger_error(sprintf(
+                "class %s must extend class BaseController",
+                $info['class']
+            ));
             exit;
         }
 
         $info['actions'] = self::getActionsList($info['class'], $ref);
 
         if (!isset($info['actions']['index'])) {
-            trigger_error("controller {$info['class']} must provide actionIndex");
+            trigger_error(sprintf(
+                "controller %s must contain actionIndex",
+                $info['class']
+            ));
             exit;
         }
 
@@ -85,12 +119,27 @@ class ControllersParser {
             $action = strtolower($data[1]);
 
             if (!$method->isPublic()) {
-                trigger_error("action {$method->class}:{$method->name} must be public!");
+                trigger_error(sprintf(
+                    "action %s:%s must be public",
+                    $method->class, $method->name
+                ));
                 exit;
             }
 
             if ($method->isStatic()) {
-                trigger_error("action {$method->class}:{$method->name} cannot be static!");
+                trigger_error(sprintf(
+                    "action %s:%s cannot be static",
+                    $method->class, $method->name
+                ));
+                exit;
+            }
+
+            if (isset($actions[$action])) {
+                trigger_error(sprintf(
+                    "duplicate methods\n- %s:%s\n- %s:%s",
+                    $method->class, $method->name,
+                    $method->class, $actions[$action]['method']
+                ));
                 exit;
             }
 

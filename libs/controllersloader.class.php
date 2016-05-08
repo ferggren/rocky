@@ -76,6 +76,15 @@ class ControllersLoader {
         return $ret;
     }
 
+    public static function rebuildCache() {
+        if (!is_array($controllers = ControllersParser::parse())) {
+            trigger_error('Unable to load controllers list');
+            exit;
+        }
+
+        self::saveToFileCache($controllers);
+    }
+
     protected static function getController($url) {
         if (isset(self::$url_cache[$url])) {
             return self::$url_cache[$url];
