@@ -64,16 +64,7 @@ class ControllersParser {
             'class' => str_replace('/', '', $name) . '_controller',
         );
 
-        if (class_exists($info['class'], false)) {
-            trigger_error(sprintf(
-                "class %s for controller %s is already exists",
-                $info['class'],
-                $info['uri']
-            ));
-            exit;
-        }
-
-        include(ROOT_PATH . '/controllers/' . $file);
+        include_once(ROOT_PATH . '/controllers/' . $file);
 
         if (!class_exists($info['class'], false)) {
             trigger_error(sprintf(

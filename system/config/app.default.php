@@ -11,18 +11,18 @@ $config = array(
     'auth_controller' => 'auth',
 
     // If true, controllers tree will be cached in ./tmp/
-    // Cache doesn't rebuild automaticly,
+    // Cache doesn't rebuild automaticly (use "./cli.php utils/cache rebuild" to update cache)
     'cache_controllers' => false,
 
     // If true, scripts will be cached in ./tmp/
-    // Cache doesn't rebuild automaticly,
+    // Cache doesn't rebuild automaticly (use "./cli.php utils/cache rebuild" to update cache)
     'cache_scripts' => false,
 
     // If true, templates will be cached in ./tmp/
-    // Cache doesn't rebuild automaticly,
+    // Cache doesn't rebuild automaticly (use "./cli.php utils/cache rebuild" to update cache)
     'cache_templates' => false,
 
-    // Salt will be used to make and check session session stuff
+    // Salt will be used to make and check session stuff
     'session_salt' => 'random_salt_here',
 
     // How often session will update user's latest activity timestamp

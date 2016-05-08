@@ -20,6 +20,44 @@ class TemplatesLoader {
         return isset($list[self::prepareView($view)]);
     }
 
+    public static function rebuildCache() {
+        if (!is_array($cache = TemplatesParser::parse())) {
+            trigger_error('error while making templates list');
+            exit;
+        }
+
+        self::saveToFileCache($cache);
+
+        $templates = array();
+
+        foreach ($cache as $template) {
+            $templates[] = $template['cache_path'];
+        }
+
+        if (!is_dir(ROOT_PATH . '/tmp/templates/')) {
+            return;
+        }
+
+        if (!($dir = opendir(ROOT_PATH . '/tmp/templates/'))) {
+            trigger_error('error while opening templates dir');
+            exit;
+        }
+
+        while ($file = readdir($dir)) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+
+            $file = '/tmp/templates/' . $file;
+
+            if (in_array($file, $templates)) {
+                continue;
+            }
+
+            unlink(ROOT_PATH . $file);
+        }
+    }
+
     protected static function getTemplate($view) {
         $view = self::prepareView($view);
         $list = self::getTemplates();

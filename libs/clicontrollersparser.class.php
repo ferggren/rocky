@@ -64,16 +64,7 @@ class CliControllersParser {
             'class' => str_replace('/', '', $script) . '_clicontroller',
         );
 
-        if (class_exists($info['class'], false)) {
-            trigger_error(sprintf(
-                "Class %s for controller %s is already exists",
-                $info['class'],
-                $info['script']
-            ));
-            exit;
-        }
-
-        include(ROOT_PATH . '/cli/' . $info['file']);
+        include_once(ROOT_PATH . '/cli/' . $info['file']);
 
         if (!class_exists($info['class'], false)) {
             trigger_error(sprintf(
