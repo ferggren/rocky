@@ -19,6 +19,20 @@ class App {
         ControllersLoader::load(self::$url);
     }
 
+    public static function shutdown() {
+        if (Config::get('app.dump_perf_debug')) {
+            self::dumpPerfLog();
+        }
+    }
+
+    protected static function dumpPerfLog() {
+        printf(
+            "<!--%5.3fs;%5.2fMB-->",
+            round(microtime(true) - TIME_START, 5),
+            round(memory_get_usage(false) / (1024 * 1024), 2)
+        );
+    }
+
     protected static function checkUrlAccess() {
         $access_info = self::getUrlAccessLevel(self::$url);
 

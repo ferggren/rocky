@@ -60,5 +60,8 @@ $config = array(
     // How often user's latest activity will be updated
     // Set false to disable
     'users_pulse' => 60,
+
+    // dump html performance debug
+    'dump_perf_debug' => true,
 );
 ?>

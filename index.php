@@ -1,6 +1,7 @@
 <?php
 date_default_timezone_set('UTC');
 define('ROOT_PATH', dirname(__FILE__) . '/');
+define('TIME_START', microtime(true));
 chdir(ROOT_PATH);
 
 error_reporting(E_ALL | E_STRICT);
@@ -38,6 +39,7 @@ include(ROOT_PATH . '/system/common.php');
 
 spl_autoload_register('autoload');
 set_error_handler(array('ErrorHandler', 'handleError'), E_ALL | E_STRICT);
+register_shutdown_function(array('App', 'shutdown'));
 
 App::run();
 ?>
