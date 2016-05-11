@@ -22,27 +22,27 @@ class UtilsHelp_CliController extends CliController {
         }
 
         if (!isset($scripts[$script])) {
-            trigger_error(sprintf(
+            printf(
                 "Script %s doesn't exists",
                 $script
-            ));
+            );
             exit;
         }
 
         $script = $scripts[$script];
 
         if (!isset($script['actions'][$method])) {
-            trigger_error(sprintf(
+            printf(
                 "Method %s:%s doesn't exists",
-                $script, $method
-            ));
+                $script['script'], $method
+            );
             exit;
         }
 
         $method = $script['actions'][$method];
 
         printf(
-            "%s:%s arguments [%d]:",
+            "%s:%s argument(s) [%d]:",
             $script['script'],
             $method['action'],
             count($method['arguments'])
@@ -66,10 +66,10 @@ class UtilsHelp_CliController extends CliController {
         }
 
         if (!isset($scripts[$script])) {
-            trigger_error(sprintf(
+            printf(
                 "Script %s doesn't exists",
                 $script
-            ));
+            );
             exit;
         }
 
@@ -77,7 +77,7 @@ class UtilsHelp_CliController extends CliController {
 
         ksort($script['actions']);
 
-        printf("%s medhods [%d]:", $script['script'], count($script['actions']));
+        printf("%s medhod(s) [%d]:", $script['script'], count($script['actions']));
 
         foreach ($script['actions'] as $action) {
             printf("\n %s", $action['action']);
