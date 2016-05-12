@@ -1,4 +1,5 @@
 app.php
 database.php
 auth.php
+lang.php
 !.gitignore
