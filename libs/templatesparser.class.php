@@ -276,6 +276,7 @@ class TemplatesParser {
         $section_content = self::parseEval($section_content, $view);
         $section_content = self::parseExport($section_content, $view);
         $section_content = self::parseBuildHash($section_content, $view);
+        $section_content = self::parseLang($section_content, $view);
 
         $section_content = '?>' . $section_content . '<?php';
         $section_content = str_replace('?><?php', '', $section_content);
@@ -514,6 +515,42 @@ class TemplatesParser {
         $section_content = preg_replace(
             $regexp,
             self::$build_hash,
+            $section_content
+        );
+
+        return $section_content;
+    }
+
+    protected static function parseLang($section_content, $view) {
+        $regexp_name = '(?:[\'"]([a-zA-Z0-9_.-]++)[\'"])|([$][a-zA-Z][a-zA-Z0-9_]*+)';
+        $regexp_array = "(array\((?:(?2)|.)*?\)|[$][a-zA-Z][a-zA-Z0-9_-]*)";
+
+        $regexp = "#@lang\s*+\(\s*+($regexp_name)\s*+(?:,\s*+$regexp_array)?\s*+\)#";
+
+        if (preg_match_all($regexp, $section_content, $data, PREG_SET_ORDER)) {
+            foreach ($data as $match) {
+                if (isset($match[4])) {
+                    $replace = 'Lang::get(' . $match[1] . ', ' . $match[4] . ')';
+                }
+                else {
+                    $replace = 'Lang::get(' . $match[1] . ')';
+                }
+
+                var_dump($replace);
+
+                $section_content = str_replace(
+                    $match[0],
+                    '<?php echo ' . $replace . '; ?>',
+                    $section_content
+                );
+            }
+        }
+
+        $regexp = '#@lang(?![0-9a-zA-Z])#s';
+
+        $section_content = preg_replace(
+            $regexp,
+            '<?php echo Lang::getLang(); ?>',
             $section_content
         );
 
