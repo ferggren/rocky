@@ -536,8 +536,6 @@ class TemplatesParser {
                     $replace = 'Lang::get(' . $match[1] . ')';
                 }
 
-                var_dump($replace);
-
                 $section_content = str_replace(
                     $match[0],
                     '<?php echo ' . $replace . '; ?>',
