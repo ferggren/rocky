@@ -214,7 +214,7 @@ class Lang {
     *   Load all strings for given prefix
     *   @param (prefix) strings file name
     */
-    protected static function getStrings($prefix) {
+    public static function getStrings($prefix) {
         if (!($lang = self::getLang())) {
             return false;
         }

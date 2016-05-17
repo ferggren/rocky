@@ -1,17 +1,22 @@
 <?php
+/**
+*   Rebuild framework caches
+*/
 class UtilsCache_CliController extends CliController {
     public function action_rebuild() {
-        printf("Updating templates cache... ");
+        CliControllersLoader::loadController('utils/lang', 'export');
+
+        printf("\nUpdating templates cache... ");
         TemplatesLoader::rebuildCache();    
-        printf("ok\n");
+        printf("ok");
 
-        printf("Updating controllers cache... ");
+        printf("\nUpdating controllers cache... ");
         ControllersLoader::rebuildCache();
-        printf("ok\n");
+        printf("ok");
 
-        printf("Updating scripts cache... ");   
+        printf("\nUpdating scripts cache... ");   
         CliControllersLoader::rebuildCache();
-        printf("ok\n");
+        printf("ok");
     }
 }
 ?>
