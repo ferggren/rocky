@@ -4,7 +4,7 @@
 */
 class UtilsLang_CliController extends CliController {
     public function action_export() {
-        printf("Exporting lang... ");
+        printf("\nExporting lang... ");
         $langs = Lang::getLangs();
 
         if (!is_array($langs) || !count($langs)) {
