@@ -4,7 +4,7 @@ class Lang {
     protected static $cache = array();
 
     /**
-    *   Returns processed lang_string
+    *   Return processed lang_string
     *   @param (lang_string) lang_string in format prefix.string
     *   @param (variables) list (key => value) of variables to be replaced in lang_string
     */
