@@ -4,6 +4,7 @@
  * @author ferg <me@ferg.in>
  * @copyright 2016 ferg
  */
+ 
 var Lang = {
     /** Current lang */
     lang: false,

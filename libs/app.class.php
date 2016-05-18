@@ -26,6 +26,10 @@ class App {
     }
 
     protected static function dumpPerfLog() {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            return;
+        }
+        
         printf(
             "<!--%5.3fs;%5.2fMB-->",
             round(microtime(true) - TIME_START, 5),
