@@ -19,7 +19,7 @@ class UtilsLang_CliController extends CliController {
 
     /**
     *   Export specified language
-    *   @param ($lang) language to export
+    *   @param (lang) language to export
     */
     protected static function exportLang($lang) {
         printf("\n%s: ", $lang);
@@ -68,7 +68,7 @@ class UtilsLang_CliController extends CliController {
 
     /**
     *   Makes js code for listed strings files (for currently selected language)
-    *   @param ($strings_list) list of strings files to be exported
+    *   @param (strings_list) list of strings files to be exported
     */
     protected static function makeStringsBuffer($strings_list) {
         $buffer = '';
