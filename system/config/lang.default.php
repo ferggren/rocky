@@ -20,7 +20,7 @@ $config = array(
 
     // List of string files that will be exported into js lang module.
     // Each prefix will include all listed strings files and
-    // will be saved in /public/lang/$prefix_$lang.js.
+    // will be saved in /public/js/lang/$prefix_$lang.js.
     'export' => array(
         // site prefix (site_en.js & site_ru.js)
         'site' => array(
