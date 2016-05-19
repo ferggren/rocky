@@ -5,7 +5,7 @@ class TemplatesParser {
 
     public static function parse() {
         self::$list = array();
-        self::$build_hash = md5(microtime(true));
+        self::$build_hash = substr(md5(microtime(true)), 0, 10);
 
         self::loadTemplates();
         self::processTemplates();
