@@ -13,7 +13,7 @@ var Rocky = {
     /** Request loading flag */
     __ajax_loading: false,
 
-    /** Timeout for onstate change */
+    /** Interval for XMLHTTP readyState watcher */
     __watch_interval: false,
 
     /**
