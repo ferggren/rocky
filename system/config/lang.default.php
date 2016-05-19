@@ -24,7 +24,8 @@ $config = array(
     'export' => array(
         // site prefix (site_en.js & site_ru.js)
         'site' => array(
-            // list of string files
+            // list of lang files
+            'ajax',
         ),
     ),
 );
