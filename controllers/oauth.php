@@ -129,7 +129,6 @@ class OAuth_Controller extends BaseController {
     }
 
     protected static function OAuthFailure() {
-        trigger_error('fuck me');
         header('Location: /');
         exit;
     }
