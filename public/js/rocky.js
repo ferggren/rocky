@@ -7,6 +7,9 @@
  */
 
 var Rocky = {
+    /** debug flag */
+    __debug: false,
+
     /** Requests queue */
     __ajax_queue: {},
 
@@ -190,7 +193,7 @@ var Rocky = {
 
             if (request.xhr.status != 200) {
                 Rocky.__ajaxError(id);
-                return;
+                continue;
             }
 
             request.response = null;
@@ -344,9 +347,14 @@ var Rocky = {
             Rocky.__ajax_loading = false;
         }
 
-        Rocky.__ajax_queue[id].success(
-            Rocky.__ajax_queue[id].response.response
-        );
+        try {
+            Rocky.__ajax_queue[id].success(
+                Rocky.__ajax_queue[id].response.response
+            );
+        }
+        catch(e) {
+            Rocky.logError(e);
+        }
 
         Rocky.__ajaxRemoveRequest(id);
 
@@ -381,7 +389,12 @@ var Rocky = {
             Rocky.__ajax_loading = false;
         }
 
-        Rocky.__ajax_queue[id].error(error);
+        try {
+            Rocky.__ajax_queue[id].error(error);
+        }
+        catch(e) {
+            Rocky.logError(e);
+        }
 
         Rocky.__ajaxRemoveRequest(id);
         
@@ -402,6 +415,47 @@ var Rocky = {
         Rocky.__ajax_queue[id] = null;
         
         delete Rocky.__ajax_queue[id];
+    },
+
+    /**
+     *  Enables debug mode
+     */
+    enableDebug: function() {
+        Rocky.__debug = true;
+    },
+
+    /**
+     *  Disables debug mode
+     */
+    disableDebug: function() {
+        Rocky.__debug = false;
+    },
+
+    /**
+     *  Check if debug is enabled
+     *
+     *  @return {boolean} Debug status
+     */
+    debugEnabled: function() {
+        return !!Rocky.__debug;
+    },
+
+    /**
+     *  Show error
+     *
+     *  @param {object} error Error object
+     */
+    logError: function(error) {
+        if (!Rocky.debugEnabled()) {
+            return;
+        }
+
+        if (typeof error == 'message') {
+            console.log(error);
+            return;
+        }
+
+        console.log(error.stack);
     },
 
     /**
