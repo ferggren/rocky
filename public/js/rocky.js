@@ -29,6 +29,7 @@ var Rocky = {
      *                       data - string, object (key: value) or FormData object
      *                       async - how request are sending, if false the next request will not be sended before previos is completed
      *                       timeout - amount of time after which request will be aborted
+     *                       progress - upload progress callback
      *  @return {boolean} Result of creating new request
      */
     ajax: function(request) {
@@ -42,6 +43,10 @@ var Rocky = {
 
         if (typeof request.success != 'function') {
             request.success = function() {};
+        }
+
+        if (typeof request.progress != 'function') {
+            request.progress = false;
         }
 
         if (typeof request.error != 'function') {
@@ -160,6 +165,16 @@ var Rocky = {
             );
         }
 
+        // upload listener
+        if (request.xhr.upload && request.xhr.upload.addEventListener) {
+            request.xhr.upload.__request_id = id;
+            request.xhr.upload.addEventListener(
+                'progress',
+                Rocky.__ajaxUpdateUploadProgress,
+                false
+            );
+        }
+
         // ajax loading flag
         if (!request.async) {
             Rocky.__ajax_loading = true;
@@ -170,6 +185,33 @@ var Rocky = {
 
         // process next requests
         Rocky.__ajaxProcess();
+    },
+
+    /**
+     * Watch request upload progress
+     *
+     *  @param {object} e ProgressEvent
+     */
+    __ajaxUpdateUploadProgress: function(e) {
+        if (!e.lengthComputable) {
+            return;
+        }
+
+        if (!e.target || !e.target.__request_id) {
+            return;
+        }
+
+        var id = e.target.__request_id;
+
+        if (!Rocky.__ajax_queue[id]) {
+            return;
+        }
+        
+        if (typeof Rocky.__ajax_queue[id].progress != 'function') {
+            return;
+        }
+
+        Rocky.__ajax_queue[id].progress(e.loaded, e.total);
     },
 
     /**
@@ -407,6 +449,13 @@ var Rocky = {
      *  @param {number} id Request id
      */
     __ajaxRemoveRequest: function(id) {
+        if (Rocky.__ajax_queue[id].xhr.upload && Rocky.__ajax_queue[id].xhr.upload.removeEventListener) {
+            Rocky.__ajax_queue[id].xhr.upload.removeEventListener(
+                'progress',
+                Rocky.__ajaxUpdateUploadProgress
+            );
+        }
+
         Rocky.__ajax_queue[id].response = null;
         Rocky.__ajax_queue[id].data = null;
         Rocky.__ajax_queue[id].xhr = null;
