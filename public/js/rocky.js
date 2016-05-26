@@ -77,6 +77,36 @@ var Rocky = {
                 10
             );
         }
+
+        return request.id;
+    },
+
+    /**
+     *  Abort XMLHTTP Request
+     *
+     *  @param {number} id Request id
+     */
+    ajaxAbort: function(request_id) {
+        if (typeof Rocky.__ajax_queue[request_id] != 'object') {
+            return;
+        }
+
+        if (Rocky.__ajax_queue[request_id].status == 'loading') {
+            if (Rocky.__ajax_queue[request_id].xhr) {
+                Rocky.__ajax_queue[request_id].xhr.abort();
+            }
+        }
+
+        Rocky.__ajax_queue[request_id].status = 'canceled';
+
+        error = 'Request canceled';
+
+        if (typeof window.Lang != 'undefined') {
+            error = Lang.get('ajax.request_canceled_error');
+        }
+
+        Rocky.__ajaxError(request_id, error);
+        Rocky.__ajaxProcess();
     },
 
     /**
@@ -144,6 +174,10 @@ var Rocky = {
 
         var request = Rocky.__ajax_queue[id];
 
+        if (request.status != 'pending') {
+            return false;
+        }
+
         request.status = 'loading';
 
         // new xhr
@@ -159,7 +193,7 @@ var Rocky = {
         request.__abort_timer = 0;
         if (parseInt(Rocky.__ajax_queue[id].timeout)) {
             request.__abort_timer = setTimeout(
-                Rocky.__ajaxAbort,
+                Rocky.__ajaxAbortByTimer,
                 request.timeout * 1000,
                 id
             );
@@ -350,11 +384,11 @@ var Rocky = {
     },
 
     /**
-     *  Abort XMLHTTP Request
+     *  Abort XMLHTTP Request by timer
      *
      *  @param {number} id Request id
      */
-    __ajaxAbort: function(id) {
+    __ajaxAbortByTimeout: function(id) {
         if (typeof Rocky.__ajax_queue[id] != 'object') {
             return;
         }
@@ -449,7 +483,9 @@ var Rocky = {
      *  @param {number} id Request id
      */
     __ajaxRemoveRequest: function(id) {
-        if (Rocky.__ajax_queue[id].xhr.upload && Rocky.__ajax_queue[id].xhr.upload.removeEventListener) {
+        if (Rocky.__ajax_queue[id].xhr &&
+            Rocky.__ajax_queue[id].xhr.upload &&
+            Rocky.__ajax_queue[id].xhr.upload.removeEventListener) {
             Rocky.__ajax_queue[id].xhr.upload.removeEventListener(
                 'progress',
                 Rocky.__ajaxUpdateUploadProgress
