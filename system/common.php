@@ -82,4 +82,40 @@ function disableBrowserCaching() {
     header('Cache-Control: max-age=0', false);
     header('Pragma: no-cache');
 }
+
+/**
+ * Generate random string
+ */
+function makeRandomString($str_len) {
+    if ($str_len < 8) {
+        $str_len = 8;
+    }
+
+    $bytes_len = ceil($str_len * 3 / 4);
+
+    $str = false;
+
+    if (!$str && function_exists('openssl_random_pseudo_bytes')) {
+        $strong = false;
+        $str = openssl_random_pseudo_bytes($bytes_len, $strong);
+
+        if (!$strong) {
+            $str = false;
+        }
+    }
+
+    if (!$str && function_exists('mcrypt_create_iv')) {
+        $str = mcrypt_create_iv($bytes_len, MCRYPT_DEV_URANDOM);
+    }
+
+    if (!$str) {
+        return false;
+    }
+
+    $str = base64_encode($str);
+    $str = substr($str, 0, $str_len);
+    $str = strtr($str, '+/', '-_');
+
+    return $str;
+}
 ?>
