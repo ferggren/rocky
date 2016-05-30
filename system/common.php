@@ -118,4 +118,19 @@ function makeRandomString($str_len) {
 
     return $str;
 }
+
+/**
+ *  Checking if connection is secured
+ */
+function isSecureConnection() {
+    if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        return true;
+    }
+
+    if (!isset($_SERVER['HTTPS']) || empty($_SERVER['HTTPS'])) {
+        return false;
+    }
+
+    return $_SERVER['HTTPS'] !== 'off';
+}
 ?>
