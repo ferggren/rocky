@@ -217,7 +217,7 @@ class Database {
         );
     }
 
-    public static function whereRaw($query, $args) {
+    public static function whereRaw($query, $args = array()) {
         return self::getDatabaseQuery()->whereRaw($query, $args);
     }
 

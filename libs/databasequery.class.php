@@ -302,11 +302,11 @@ abstract class DatabaseQuery {
         $ph_count = 0;
 
         for ($i = 0, $len = strlen($query); $i < $len; ++$i) {
-            if (!$query[$i] == '?') {
+            if ($query[$i] == '?') {
                 ++$ph_count;
             }
         }
-
+        
         if ($args_count != $ph_count) {
             trigger_error('placeholders amount must mutch arguments amount');
             exit;
