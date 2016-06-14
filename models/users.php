@@ -7,7 +7,7 @@ class Users extends Database {
 
     public function __construct($fields_new = array()) {
         parent::__construct($fields_new);
-        $this->user_salt = substr(md5(microtime()), 0, 16);
+        $this->user_salt = makeRandomString(16);
     }
 
     public function checkPassword($password) {

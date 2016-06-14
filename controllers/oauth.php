@@ -28,7 +28,7 @@ class OAuth_Controller extends BaseController {
             exit;
         }
 
-        // redirect link?
+        self::__saveReferer();
 
         header('Location: ' . $link);
     }
@@ -154,8 +154,13 @@ class OAuth_Controller extends BaseController {
      *  Oauth success
      */
     protected static function __OAuthSuccess() {
-        // redirect link?
-        header('Location: /');
+        if (!($redirect = self::__getReferer())) {
+            $redirect = '/';
+        }
+
+        self::__clearReferer();
+
+        header('Location: ' . $redirect);
         exit;
     }
 
@@ -163,6 +168,10 @@ class OAuth_Controller extends BaseController {
      *  Oauth error
      */
     protected static function __OAuthFailure() {
+        // whoops
+
+        self::__clearReferer();
+
         header('Location: /');
         exit;
     }
@@ -194,6 +203,113 @@ class OAuth_Controller extends BaseController {
         $class = $prefix . 'oauth';
 
         return new $class;
+    }
+
+    /**
+     *  Saves referer for further needs
+     */
+    protected static function __saveReferer() {
+        if (!isset($_SERVER['HTTP_REFERER']) || !$_SERVER['HTTP_REFERER']) {
+            return false;
+        }
+
+        if (!($domain = self::__getDomain())) {
+            return false;
+        }
+
+        $referer = $_SERVER['HTTP_REFERER'];
+
+        $regexp  = 'https?://';
+        $regexp .= '([0-9a-zA-Z_-]+\.)*';
+        $regexp .= preg_quote($domain, '#');
+        $regexp .= '(?::\d{1,5})?';
+
+        if (!preg_match('#^' . $regexp . '#', $referer)) {
+            return false;
+        }
+
+        $referer = base64_encode($referer);
+
+        setcookie(
+            '__oauth_referer',
+            $referer,
+            time() + 86400 * 3,
+            '/',
+            Config::get('app.cookie_domain')
+        );
+
+        return true;
+    }
+
+    /**
+     *  Clear referer
+     */
+    protected static function __clearReferer() {
+        setcookie(
+            '__oauth_referer',
+            '',
+            time() - 86400 * 3,
+            '/',
+            Config::get('app.cookie_domain')
+        );
+    }
+
+    /**
+     *  Returns referer link
+     *
+     *  @return {string} Referer
+     */
+    protected static function __getReferer() {
+        if (!isset($_COOKIE['__oauth_referer'])) {
+            return '/';
+        }
+
+        $referer = $_COOKIE['__oauth_referer'];
+
+        if (!($referer = base64_decode($referer))) {
+            return '/';
+        }
+
+        $referer = str_replace(
+            array("\r", "\t", "\n", " ", '"', '"'),
+            array('', '', '', '', '', ''),
+            $referer
+        );
+
+        if (!$referer) {
+            return '/';
+        }
+
+        return $referer;
+    }
+
+    /**
+     *  Returns current domain
+     *
+     *  @return {string} Current domain
+     */
+    protected static function __getDomain() {
+        $domain = false;
+
+        if (isset($_SERVER['SERVER_NAME'])) {
+            $domain = $_SERVER['SERVER_NAME'];
+        }
+
+        else if (isset($_SERVER['HTTP_HOST'])) {
+            $domain = $_SERVER['HTTP_HOST'];
+        }
+
+        if (!$domain) {
+            return false;
+        }
+
+        $domain = strtolower($domain);
+
+        if (!preg_match('#^((?:[0-9a-zA-Z_]++\.)++[0-9a-z]{1,5})#', $domain, $data)) {
+            return false;
+        }
+
+        return $data[1];
     }
 }
 ?>
