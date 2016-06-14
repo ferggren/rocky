@@ -4,11 +4,11 @@ $config = array(
     // Each method can be disabled by setting 'enabled' to false
     'oauth' => array(
         // Vkontakte
-        'vk' => array(
+        'vkontakte' => array(
             'enabled' => false,
             'app_id' => '',
             'app_secret' => '',
-            'redirect' => '//example.com/oauth/process/vk',
+            'redirect' => '//example.com/oauth/process/vkontakte',
             'app_scope' => 'offline',
         ),
     ),

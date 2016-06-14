@@ -1,7 +1,7 @@
 <?php
-class VkOAuth extends OAuthBase {
-    protected static $prefix = 'vk';
-    protected static $table = 'users_oauth_vk';
+class VkontakteOAuth extends OAuthBase {
+    protected static $prefix = 'vkontakte';
+    protected static $table = 'users_oauth_vkontakte';
     protected $entry = false;
 
     public function getRedirectLink() {
@@ -83,9 +83,9 @@ class VkOAuth extends OAuthBase {
 
         $entry = new Database(static::$table);
         $entry->user_id = 0;
-        $entry->vk_id = $user_info['uid'];
-        $entry->vk_name = trim($user_info['first_name'] . ' ' . $user_info['last_name']);
-        $entry->vk_photo = $photo;
+        $entry->vkontakte_id = $user_info['uid'];
+        $entry->vkontakte_name = trim($user_info['first_name'] . ' ' . $user_info['last_name']);
+        $entry->vkontakte_photo = $photo;
         $entry->last_login = time();
         $entry->access_token = $info['access_token'];
 
@@ -104,9 +104,9 @@ class VkOAuth extends OAuthBase {
         }
 
         return array(
-            'oauth_id' => $this->entry->vk_id,
-            'photo' => $this->entry->vk_photo,
-            'name' => $this->entry->vk_name,
+            'oauth_id' => $this->entry->vkontakte_id,
+            'photo' => $this->entry->vkontakte_photo,
+            'name' => $this->entry->vkontakte_name,
             'user_id' => $this->entry->user_id,
         );
     }
