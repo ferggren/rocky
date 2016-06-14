@@ -1,8 +1,23 @@
 <?php
+/**
+ * @file Provides user support
+ * @name User
+ * @author ferg <me@ferg.in>
+ * @copyright 2016 ferg
+ */
+
 class User {
+    /**
+     *  User DB entry
+     */
     protected static $user = false;
 
+    /**
+     *  Static methods like User::get_user_name() OR  User::get_user_id()
+     */
     public static function __callStatic($name, $fuckoff) {
+        self::__init();
+
         if (preg_match('#^get_([0-9a-z_-]++)$#', $name, $data)) {
             if (!self::$user) {
                 return false;
@@ -14,14 +29,24 @@ class User {
         }
     }
 
+    /**
+     *  Checks if user is authenticated
+     *
+     *  @return {boolean} Auth check
+     */
     public static function isAuthenticated() {
-        self::init();
-
+        self::__init();
         return !!self::$user;
     }
 
+    /**
+     *  Checks if user has access to specified level
+     *
+     *  @param {string} access_level Access level name
+     *  @return {boolean} Access check status
+     */
     public static function hasAccess($access_level) {
-        self::init();
+        self::__init();
 
         if (!self::$user) {
             return false;
@@ -30,7 +55,15 @@ class User {
         return self::$user->hasAccess($access_level);
     }
 
-    public static function loginAs($user_id) {
+    /**
+     *  Set current user to specified user
+     *
+     *  @param {number} user_id User id
+     *  @return {boolean} Access check status
+     */
+    public static function setUserTo($user_id) {
+        self::__init();
+
         self::$user = false;
 
         if (!$user_id) {
@@ -69,12 +102,13 @@ class User {
         self::$user = $user;
     }
 
-    public static function logout() {
-        self::loginAs(0);
-    }
-
+    /**
+     *  Return user photo
+     *
+     *  @return {string} Link to photo
+     */
     public static function getPhoto() {
-        self::init();
+        self::__init();
 
         if (!self::isAuthenticated()) {
             return Config::get('app.user_photo_placeholder');
@@ -91,7 +125,10 @@ class User {
         return $photo;
     }
 
-    protected static function init() {
+    /**
+     *  Init user
+     */
+    protected static function __init() {
         static $init = false;
 
         if ($init) {
@@ -100,6 +137,10 @@ class User {
 
         $init = true;
 
-        self::loginAs(Session::getUserId());
+        if (self::$user !== false) {
+            return;
+        }
+
+        self::setUserTo(Session::getUserId());
     }
 }

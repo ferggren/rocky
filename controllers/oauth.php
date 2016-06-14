@@ -1,103 +1,118 @@
 <?php
 class OAuth_Controller extends BaseController {
+    /**
+     *  No default action
+     */
     public function actionIndex() {
         header('Location: /');
         exit;
     }
 
+    /**
+     *  Initialize oauth
+     *
+     *  @param {string} prefix Oauth type
+     */
     public function actionInit($prefix) {
-        $oauth = self::getOAuthObject($prefix);
+        $oauth = self::__getOAuthObject($prefix);
 
         if (!$oauth) {
-            self::OAuthFailure();
+            self::__OAuthFailure();
             exit;
         }
 
         $link = $oauth->getRedirectLink();
 
         if (!$link) {
-            self::OAuthFailure();
+            self::__OAuthFailure();
             exit;
         }
+
+        // redirect link?
 
         header('Location: ' . $link);
     }
 
+    /**
+     *  Process oauth
+     *
+     *  @param {string} prefix Oauth type
+     */
     public function actionProcess($prefix) {
-        $oauth = self::getOAuthObject($prefix);
+        $oauth = self::__getOAuthObject($prefix);
 
         if (!$oauth) {
-            self::OAuthFailure();
+            self::__OAuthFailure();
             exit;
         }
 
         if (!$oauth->processAuth()) {
-            self::OAuthFailure();
+            self::__OAuthFailure();
             exit;
         }
 
         if (!($info = $oauth->getUserInfo())) {
-            self::OAuthFailure();
+            self::__OAuthFailure();
             exit;
         }
 
+        // If OAuth is already linked to some account
         if (($user_id = $oauth->getLinkedUser()) > 0) {
+            self::__logOAuth($user_id, $prefix, $info['oauth_id']);
+
             if (!User::isAuthenticated()) {
                 Session::login($user_id);
-
-                if (Config::get('app.log_users_auth')) {
-                    UsersLogger::logAction(
-                        $user_id,
-                        'oauth',
-                        $prefix.':'.$info['oauth_id']
-                    );
-                }
-
-                return self::OAuthSuccess();
+                return self::__OAuthSuccess();
             }
 
             if (User::get_user_id() == $user_id) {
-                return self::OAuthSuccess();
+                return self::__OAuthSuccess();
             }
 
-            // WTF?
             Session::logout();
             Session::login($user_id);
 
             return $this->actionSuccess();
         }
 
+        // Account is not linked & user is authenticated
         if (User::isAuthenticated()) {
             if (!$oauth->linkAccount(User::get_user_id())) {
-                self::OAuthFailure();
+                self::__OAuthFailure();
                 exit;
             }
 
-            if (!User::get_user_photo() && ($user = Users::find(User::get_user_id()))) {
-                $photo = $oauth->exportPhoto();
-                $user->photo = $photo ? $photo : '';
-                $user->save();
-            }
+            if ($user = Users::find(User::get_user_id())) {
+                $changed = false;
 
-            if (Config::get('app.log_users_auth')) {
-                UsersLogger::logAction(
-                    User::get_user_id(),
-                    'oauth',
-                    $prefix.':'.$info['oauth_id']
-                );
-            }
+                if (!$user->user_name) {
+                    $user->user_name = $info['name'];
+                    $changed = true;
+                }
 
-            self::OAuthSuccess();
+                if (!$user->user_photo && ($photo = $oauth->exportPhoto())) {
+                    $user->user_photo = $photo;
+                    $changed = true;
+                }
+
+                if ($changed) {
+                    $user->save();
+                }
+            }
+            
+            self::__logOAuth(User::get_user_id(), $prefix, $info['oauth_id']);
+            self::__OAuthSuccess();
+
             exit;
         }
 
+        // Account is not linked & user is not authenticated
         $photo = $oauth->exportPhoto();
 
         $user = new Users;
 
         $user->user_name = $info['name'];
         $user->user_login = md5(microtime(true));
-        $user->user_password = '';
         $user->user_photo = $photo ? $photo : '';
 
         $user->save();
@@ -106,34 +121,59 @@ class OAuth_Controller extends BaseController {
         $user->save();
 
         if(!$oauth->linkAccount($user->user_id)) {
-            self::OAuthFailure();
+            $user->delete();
+            self::__OAuthFailure();
             exit;
         }
 
         Session::login($user->user_id);
 
-        if (Config::get('app.log_users_auth')) {
-            UsersLogger::logAction(
-                $user->user_id,
-                'oauth',
-                $prefix.':'.$info['oauth_id']
-            );
+        self::__logOAuth($user->user_id, $prefix, $info['oauth_id']);
+        self::__OAuthSuccess();
+    }
+
+    /**
+     *  Log oauth attempt
+     *
+     *  @param {number} user_id User id
+     *  @param {string} prefix Oauth prefix
+     */
+    protected static function __logOAuth($user_id, $prefix, $oauth_id) {
+        if (!Config::get('app.log_users_auth')) {
+            return false;
         }
 
-        self::OAuthSuccess();
+        UsersLogger::logAction(
+            $user_id,
+            'oauth',
+            $prefix.':'.$oauth_id
+        );
     }
 
-    protected static function OAuthSuccess() {
+    /**
+     *  Oauth success
+     */
+    protected static function __OAuthSuccess() {
+        // redirect link?
         header('Location: /');
         exit;
     }
 
-    protected static function OAuthFailure() {
+    /**
+     *  Oauth error
+     */
+    protected static function __OAuthFailure() {
         header('Location: /');
         exit;
     }
 
-    protected static function getOAuthObject($prefix) {
+    /**
+     *  Returns oauth object related to prefix
+     *
+     *  @param {string} prefix Oauth type
+     *  @return {object} Oauth object
+     */
+    protected static function __getOAuthObject($prefix) {
         if (!$prefix) {
             return false;
         }

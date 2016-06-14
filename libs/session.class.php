@@ -113,7 +113,7 @@ class Session {
         self::$session->user_id = $user_id;
         self::$session->save();
 
-        User::loginAs($user_id);
+        User::setUserTo($user_id);
 
         return true;
     }
@@ -124,7 +124,7 @@ class Session {
     public static function logout() {
         self::__init();
 
-        User::logout();
+        User::setUserTo(0);
 
         if (!self::$session) {
             return true;
