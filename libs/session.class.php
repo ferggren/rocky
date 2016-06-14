@@ -1,36 +1,44 @@
 <?php
+/**
+ * @file Provides session support
+ * @name Session
+ * @author ferg <me@ferg.in>
+ * @copyright 2016 ferg
+ */
+
 class Session {
+    /**
+     *  Session DB entry
+     */
     protected static $session = false;
 
-    public static function init() {
-        static $init = false;
-
-        if ($init) {
-            return true;
-        }
-
-        $init = true;
-
-        self::loadSession();
-    }
-
+    /**
+     *  Returns session ID
+     *
+     *  @return {string} Session id
+     */
     public static function getSessionId() {
-        self::init();
+        self::__init();
 
         if (self::$session !== false) {
             return self::$session->session_id;
         }
 
-        if (self::createSession()) {
+        if (self::__createSession()) {
             return self::$session->session_id;
         }
 
-        trigger_error('error while creating new session');
+        trigger_error('Session cannot be created');
         exit;
     }
 
+    /**
+     *  If user is logged in, returns his ID
+     *
+     *  @return {number} User id
+     */
     public static function getUserId() {
-        self::init();
+        self::__init();
 
         if (!self::$session) {
             return 0;
@@ -39,6 +47,11 @@ class Session {
         return self::$session->user_id;
     }
 
+    /**
+     *  Returns user IP
+     *
+     *  @return {string} User ip
+     */
     public static function getSessionIp() {
         static $ip = false;
 
@@ -81,12 +94,17 @@ class Session {
         return $ip = false;
     }
 
+    /**
+     *  Login as specified user
+     *
+     *  @param {number} user_id User id
+     */
     public static function login($user_id) {
-        self::init();
+        self::__init();
 
         if (!self::$session) {
-            if (!self::createSession()) {
-                trigger_error('error while creating new session');
+            if (!self::__createSession()) {
+                trigger_error('Session cannot be created');
                 exit;
             }
         }
@@ -100,8 +118,11 @@ class Session {
         return true;
     }
 
+    /**
+     *  User logout
+     */
     public static function logout() {
-        self::init();
+        self::__init();
 
         User::logout();
 
@@ -115,29 +136,38 @@ class Session {
         return true;
     }
 
-    protected static function createSession() {
-        $salt = Config::get('app.session_salt');
+    /**
+     *  Initializes new session
+     */
+    protected static function __init() {
+        static $init = false;
+
+        if ($init) {
+            return true;
+        }
+
+        $init = true;
+
+        self::__loadSession();
+    }
+
+    /**
+     *  Creates new session
+     */
+    protected static function __createSession() {
         $session_id = false;
 
         while (true) {
-            $str = implode(
-                ':',
-                array(
-                    $salt,
-                    microtime(),
-                    self::getSessionIp(),
-                    $salt
-                )
-            );
-
-            $session_id = md5($str);
+            if (!($session_id = makeRandomString(32))) {
+                return false;
+            }
 
             if (!Sessions::find($session_id)) {
                 break;
             }
         }
 
-        $sign = self::makeSign($session_id);
+        $sign = self::__makeSign($session_id);
 
         setcookie(
             '__session_id',
@@ -161,7 +191,10 @@ class Session {
         return true;
     }
 
-    protected static function loadSession() {
+    /**
+     *  Tries to load an exists sesssion
+     */
+    protected static function __loadSession() {
         if (!isset($_COOKIE['__session_id'])) {
             return false;
         }
@@ -178,7 +211,7 @@ class Session {
         $sign = substr($session_id, 32, 32);
         $session_id = substr($session_id, 0, 32);
 
-        if ($sign != self::makeSign($session_id)) {
+        if ($sign != self::__makeSign($session_id)) {
             return false;
         }
 
@@ -211,7 +244,10 @@ class Session {
         return true;
     }
 
-    protected static function makeSign($session_id) {
+    /**
+     *  Creates session sign
+     */
+    protected static function __makeSign($session_id) {
         $salt = Config::get('app.session_salt');
 
         return md5($salt . $session_id . $salt);
