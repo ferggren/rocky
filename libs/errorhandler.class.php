@@ -3,6 +3,10 @@ class ErrorHandler {
     public static function handleError($errno, $errstr) {
         Logger::log("{$errstr} ({$errno})", 'runtime');
 
+        if ($errno == E_NOTICE) {
+            return;
+        }
+        
         if (Config::get('app.debug')) {
             $error = "{$errstr} ({$errno})";
         }
@@ -65,6 +69,10 @@ class ErrorHandler {
     }
 
     public static function handleCliError($errno, $errstr) {
+        if ($errno == E_NOTICE) {
+            return;
+        }
+
         echo $errstr . " ({$errno})\n\n";
 
         self::printBacktrace(self::getBacktrace());
