@@ -120,13 +120,13 @@ abstract class OAuthBase {
         $dir = '/images/avatars/'.substr($hash, 0, 2).'/'.substr($hash, 3, 1).'/';
         $file = substr($hash, 10, 10) . '.png';
 
-        if (!file_exists($dir_path = ROOT_PATH . '/public/' . $dir)) {
+        if (!file_exists($dir_path = ROOT_PATH . '/frontend/public/' . $dir)) {
             $oldumask = umask(0);
             mkdir($dir_path, octdec(str_pad("777", 4, '0', STR_PAD_LEFT)), true);
             umask($oldumask);
         }
 
-        imagepng($image, ROOT_PATH . '/public/' . $dir . $file, 0);
+        imagepng($image, ROOT_PATH . '/frontend/public/' . $dir . $file, 0);
 
         return $dir . $file;
     }

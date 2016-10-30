@@ -47,7 +47,7 @@ class UtilsLang_CliController extends CliController {
       $buffer .= self::makeStringsBuffer($list);
       $buffer .= '};';
 
-      $file = ROOT_PATH . '/public/js/lang/' . $file_prefix . '_' . $lang . '.js';
+      $file = ROOT_PATH . '/frontend/public/js/lang/' . $file_prefix . '_' . $lang . '.js';
       $file_tmp = ROOT_PATH . '/tmp/lang.tmp';
 
       if (!($fd = fopen($file_tmp, 'wb'))) {
