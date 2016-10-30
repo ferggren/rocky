@@ -1,14 +1,14 @@
 <?php
 $config = array(
-    // Enables debug output
-    'debug' => true,
+    // production || dev
+    'env' => 'production',
 
     // Controller that will be loaded by default
     // (if empty or incorrect controller was passed in url)
     'default_controller' => 'index',
 
     // Controller that will be loaded if user needs authentication
-    'auth_controller' => 'auth',
+    'auth_controller' => 'index',
 
     // If true, controllers tree will be cached in ./tmp/
     // Cache doesn't rebuild automaticly (use "./cli.php utils/cache rebuild" to update cache)
@@ -63,5 +63,10 @@ $config = array(
 
     // dump html performance debug
     'dump_perf_debug' => true,
+
+    // Analytics code
+    'footer_counters' => array(
+        
+    ),
 );
 ?>

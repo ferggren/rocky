@@ -7,7 +7,7 @@ class ErrorHandler {
             return;
         }
         
-        if (Config::get('app.debug')) {
+        if (Config::get('app.env') == 'dev') {
             $error = "{$errstr} ({$errno})";
         }
         else {
@@ -39,7 +39,7 @@ class ErrorHandler {
 
         echo $error;
 
-        if (Config::get('app.debug')) {
+        if (Config::get('app.env') == 'dev') {
             echo "<br /><pre>\n";
 
             self::printBacktrace(self::getBacktrace());
@@ -54,7 +54,7 @@ class ErrorHandler {
     protected static function showAjaxError($error) {
         header('Content-type: application/json; charset=UTF-8');
 
-        if (Config::get('app.debug') && count($stack = self::getBacktrace())) {
+        if (Config::get('app.env') == 'dev' && count($stack = self::getBacktrace())) {
             $error = $stack[0]['file'] . ' => ' . $error;
         }
 

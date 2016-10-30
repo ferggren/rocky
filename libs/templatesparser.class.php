@@ -22,7 +22,7 @@ class TemplatesParser {
      */
     public static function parse() {
         self::$list = array();
-        self::$build_hash = substr(md5(microtime(true)), 0, 10);
+        self::$build_hash = substr(md5(microtime(true)), 0, 8);
 
         self::__loadTemplates();
         self::__processTemplates();
@@ -324,6 +324,7 @@ class TemplatesParser {
             $section_content
         );
 
+        $section_content = self::__removeSpaces($section_content, $view);
         $section_content = self::__parseLang($section_content, $view);
         $section_content = self::__parseVariables($section_content, $view);
         $section_content = self::__parseInclude($section_content, $view);
@@ -352,6 +353,47 @@ class TemplatesParser {
         $method .= "\n}\n";
 
         return $method;
+    }
+
+    /**
+     *  Remove extra spaces from view
+     *
+     *  @param {string} section_content Section content
+     *  @param {string} view Section's view
+     *  @return {string} Processed section
+     */
+    protected static function __removeSpaces($section_content, $view) {
+        static $tags = false;
+
+        if (!$tags) {
+            $tags = implode('|', array(
+                'table', 'td', 'tr', 'tbody', 'thead',
+                'div',
+                'ul', 'li', 'ol',
+                'd[dtl]',
+                'script', 'style', 'meta', 'body', 'html', 'head', 'title', 'link',
+                'form',
+                'img',
+                'br',
+                'p',
+                'a',
+                'h[123456]',
+            ));
+        }
+
+        $section_content = preg_replace(
+            "#\s++(</?(?:{$tags})(?=[\s<>])[^<>]*+>)#uis",
+            "$1",
+            $section_content
+        );
+
+        $section_content = preg_replace(
+            "#(</?(?:{$tags})(?=[\s<>])[^<>]*+>)\s++#uis",
+            "$1",
+            $section_content
+        );
+
+        return $section_content;
     }
 
     /**
@@ -778,7 +820,7 @@ class TemplatesParser {
             return self::$build_hash;
         }
 
-        return substr(md5(md5_file(ROOT_PATH . $file_path)), 0, 10);
+        return substr(md5(md5_file(ROOT_PATH . $file_path)), 0, 8);
     }
 }
 ?>

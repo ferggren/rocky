@@ -271,7 +271,7 @@ abstract class DatabaseQuery {
     public function where($field, $comparison_operator, $arg, $logical_operator = 'AND', $arg_type = 'variable') {
         $this->where_raw = '';
 
-        if (!in_array($comparison_operator, array('<', '<=', '=', '>=', '>', '<>', '!=', 'LIKE'))) {
+        if (!in_array($comparison_operator, array('<', '<=', '=', '>=', '>', '<>', '!=', 'LIKE', 'IN'))) {
             trigger_error('incorrect operator: ' . $comparison_operator);
             exit;
         }
@@ -295,7 +295,7 @@ abstract class DatabaseQuery {
         return $this->where($field, $operator, $arg, 'AND', $arg_type);
     }
 
-    public function whereRaw($query, $args) {
+    public function whereRaw($query, $args = array()) {
         $this->where = array();
 
         $args_count = count($args);
@@ -418,11 +418,26 @@ abstract class DatabaseQuery {
             $query .= $this->escapeFieldName($where['field']);
             $query .= ' ' . $where['comparison_operator'] . ' ';
 
-            if ($where['arg_type'] == 'variable') {
-                $query .= $this->escapeFieldValue($where['arg']);
+            if ($where['comparison_operator'] == 'IN') {
+                $_in   = array();
+                $_args = is_array($where['arg']) ? $where['arg'] : array($where['arg']);
+
+                foreach ($_args as $arg) {
+                    $_in[] = $this->escapeFieldValue($arg);
+                }
+
+                $query .= '(' . implode(',', $_in) . ')';
+
+                $_args = null;
+                $_in   = null;
             }
             else {
-                $query .= $this->escapeFieldName($where['arg']);
+                if ($where['arg_type'] == 'variable') {
+                    $query .= $this->escapeFieldValue($where['arg']);
+                }
+                else {
+                    $query .= $this->escapeFieldName($where['arg']);
+                }
             }
         }
 
