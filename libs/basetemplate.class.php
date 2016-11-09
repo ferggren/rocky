@@ -1,9 +1,9 @@
 <?php
 class BaseTemplate {
-    protected $args = false;
+  protected $args = false;
 
-    public function __construct($args = array()) {
-        $this->args = $args;
-    }
+  public function __construct($args = array()) {
+    $this->args = $args;
+  }
 }
 ?>
