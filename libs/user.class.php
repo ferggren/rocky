@@ -30,6 +30,15 @@ class User {
     }
 
     /**
+     *  Get User object
+     *
+     *  @return {object} User object
+     */
+    public static function getUser() {
+        return self::$user;
+    }
+
+    /**
      *  Checks if user is authenticated
      *
      *  @return {boolean} Auth check
@@ -40,19 +49,19 @@ class User {
     }
 
     /**
-     *  Checks if user has access to specified level
+     *  Checks if user has access to specified group
      *
-     *  @param {string} access_level Access level name
-     *  @return {boolean} Access check status
+     *  @param {string} group Group name
+     *  @return {boolean} Check status
      */
-    public static function hasAccess($access_level) {
+    public static function hasAccess($group) {
         self::__init();
 
         if (!self::$user) {
             return false;
         }
 
-        return self::$user->hasAccess($access_level);
+        return self::$user->hasAccess($group);
     }
 
     /**

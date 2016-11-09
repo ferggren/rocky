@@ -88,10 +88,14 @@ class Session {
                 continue;
             }
 
+            if (in_array($ip, array('127.0.0.1', '0.0.0.0'))) {
+                continue;
+            }
+
             return $ip = $data[0];
         }
 
-        return $ip = false;
+        return $ip = '127.0.0.1';
     }
 
     /**

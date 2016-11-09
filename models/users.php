@@ -10,6 +10,21 @@ class Users extends Database {
         $this->user_salt = makeRandomString(16);
     }
 
+    public function export($detailed = false) {
+        $info = array(
+            'id'    => (int)$this->user_id,
+            'name'  => $this->user_name,
+            'photo' => $this->user_photo,
+
+        );
+
+        if ($detailed) {
+            $info['groups'] = explode(',', $this->user_groups);
+        }
+
+        return $info;
+    }
+
     public function checkPassword($password) {
         return $this->user_password == $this->makePassword($password);
     }
@@ -23,31 +38,11 @@ class Users extends Database {
     }
 
     public function hasAccess($access_level) {
-        $query = Database::from(
-            'users_access_levels ul',
-            'users_access_levels_rel ulr'
-        );
+        if (!count($groups = explode(',', $this->user_groups))) {
+            return false;
+        }
 
-        $query->whereAnd(
-            'ulr.user_id',
-            '=',
-            $this->user_id
-        );
-
-        $query->whereAnd(
-            'ulr.access_level_id',
-            '=',
-            'ul.access_level_id',
-            'field'
-        );
-
-        $query->whereAnd(
-            'ul.access_level_name',
-            'LIKE',
-            $access_level
-        );
-
-        return !!$query->count();
+        return in_array($access_level, $groups);
     }
 
     public function getPhoto() {
